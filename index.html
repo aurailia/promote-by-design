@@ -316,7 +316,7 @@
     <div class="brand">She <span>Promotes&trade;</span></div>
     <div class="brand-sub">Promo Planner</div>
     <nav class="nav" id="nav" aria-label="Sections"></nav>
-    <p class="side-note">Your plan saves on this device.</p>
+    <p class="side-note">Your plan saves on this device. <a href="#" id="backupLink">Back it up</a></p>
   </aside>
   <div class="scrim" id="scrim"></div>
   <div class="main">
@@ -335,7 +335,7 @@
   var KEY = 'shePromotesPromoPlanner';
 
   /* ---------- state ---------- */
-  function blankBusiness() { return { you: '', name: '', what: '', who: '', problem: '', change: '', offers: [blankOffer()], community: { name: '', link: '', what: '' }, story: '', proof: '', vibe: [], words: '', avoid: '', look: '', website: '', about: '', best: '', admire: '', admireWhy: '', moments: '' }; }
+  function blankBusiness() { return { you: '', name: '', what: '', who: '', problem: '', change: '', offers: [blankOffer()], community: { name: '', link: '', what: '', draws: '', items: [] }, story: '', proof: '', vibe: [], words: '', avoid: '', look: '', website: '', about: '', best: '', admire: '', admireWhy: '', moments: '' }; }
   function blankOffer() { return { name: '', what: '', format: '', price: '', link: '' }; }
   function blankWeek() { return { start: defaultMonday(), focus: 'rotate', rest: [], groups: [], slots: {}, done: [], platforms: [] }; }
   function blankResults() { return { values: {}, notes: '' }; }
@@ -364,7 +364,8 @@
           ['you', 'name', 'what', 'who', 'problem', 'change', 'moments', 'story', 'proof', 'words', 'avoid', 'look', 'website', 'about', 'best', 'admire', 'admireWhy'].forEach(function (k) { if (typeof sb[k] === 'string') b0[k] = sb[k]; });
           if (Array.isArray(sb.vibe)) b0.vibe = sb.vibe.filter(function (v) { return typeof v === 'string'; });
           if (Array.isArray(sb.offers) && sb.offers.length) b0.offers = sb.offers.slice(0, 3).map(function (o) { var n = blankOffer(); if (o && typeof o === 'object') Object.keys(n).forEach(function (k) { if (typeof o[k] === 'string') n[k] = o[k]; }); return n; });
-          if (sb.community && typeof sb.community === 'object') ['name', 'link', 'what'].forEach(function (k) { if (typeof sb.community[k] === 'string') b0.community[k] = sb.community[k]; });
+          if (sb.community && typeof sb.community === 'object') if (sb.community && Array.isArray(sb.community.items)) b0.community.items = sb.community.items.filter(function (x) { return x && typeof x === 'object'; }).slice(0, 6).map(function (x) { return { name: String(x.name || ''), what: String(x.what || ''), helps: String(x.helps || '') }; });
+          if (sb.community && typeof sb.community === 'object') ['name', 'link', 'what', 'draws'].forEach(function (k) { if (typeof sb.community[k] === 'string') b0.community[k] = sb.community[k]; });
         }
         if (saved.week && typeof saved.week === 'object') {
           var w0 = state.week, sw = saved.week;
@@ -376,7 +377,7 @@
           if (Array.isArray(sw.groups)) w0.groups = sw.groups.filter(function (g) { return g && typeof g.id === 'string'; }).map(function (g) { return { id: g.id, name: typeof g.name === 'string' ? g.name : '', url: typeof g.url === 'string' ? g.url : '', days: Array.isArray(g.days) ? g.days.filter(function (n) { return typeof n === 'number'; }) : [] }; });
           if (sw.slots && typeof sw.slots === 'object') Object.keys(sw.slots).forEach(function (k) {
             var x = sw.slots[k]; if (!x || typeof x !== 'object' || k.indexOf('-g') > -1) return;
-            w0.slots[k] = { offer: typeof x.offer === 'string' ? x.offer : '', text: typeof x.text === 'string' ? x.text : '', title: typeof x.title === 'string' ? x.title : '', ig: typeof x.ig === 'string' ? x.ig : '', fb: typeof x.fb === 'string' ? x.fb : '', tt: typeof x.tt === 'string' ? x.tt : '', imgPrompt: typeof x.imgPrompt === 'string' ? x.imgPrompt : '', img: typeof x.img === 'string' ? x.img : '', posted: !!x.posted };
+            w0.slots[k] = { offer: typeof x.offer === 'string' ? x.offer : '', text: typeof x.text === 'string' ? x.text : '', title: typeof x.title === 'string' ? x.title : '', draw: typeof x.draw === 'string' ? x.draw : '', ig: typeof x.ig === 'string' ? x.ig : '', fb: typeof x.fb === 'string' ? x.fb : '', tt: typeof x.tt === 'string' ? x.tt : '', imgPrompt: typeof x.imgPrompt === 'string' ? x.imgPrompt : '', img: typeof x.img === 'string' ? x.img : '', posted: !!x.posted };
           });
         }
         if (saved.results && typeof saved.results === 'object') {
@@ -790,6 +791,66 @@
       '</g></svg>';
   }
 
+  /* ---------- backup ---------- */
+  function exportBackup() {
+    save();
+    var text = JSON.stringify(state);
+    var name = 'promo-planner-backup-' + ymd(new Date()) + '.json';
+    try {
+      var blob = new Blob([text], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = el('a', { href: url, download: name, style: 'display:none' });
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+      toast('Backup saved. Keep it somewhere safe.');
+    } catch (e) { toast("The backup couldn't be saved on this browser."); }
+  }
+  function importBackup(file, done) {
+    if (!file) return;
+    var r = new FileReader();
+    r.onload = function () {
+      var data;
+      try { data = JSON.parse(r.result); } catch (e) { toast("That file isn't a Promo Planner backup."); return; }
+      if (!data || typeof data !== 'object' || !(data.design || data.business || data.week)) { toast("That file isn't a Promo Planner backup."); return; }
+      done(r.result);
+    };
+    r.onerror = function () { toast("That file couldn't be read."); };
+    r.readAsText(file);
+  }
+  function backupCard() {
+    var pending = null;
+    var status = el('div', {});
+    var file = el('input', { type: 'file', accept: 'application/json,.json', 'aria-label': 'Choose a backup file' });
+    var pick = el('span', { class: 'btn filebtn' }, ['Restore a backup', file]);
+    file.addEventListener('change', function () {
+      importBackup(file.files && file.files[0], function (text) {
+        pending = text; file.value = '';
+        status.innerHTML = '';
+        status.appendChild(el('div', { class: 'callout' }, [
+          el('strong', { text: 'Ready to restore. ' }),
+          'This replaces everything in your planner on this device with your backup.',
+          el('div', { class: 'actions' }, [
+            twoStep('Restore my backup', 'Tap again to replace my planner', function () {
+              try { window.localStorage.setItem(KEY, pending); } catch (e) { toast("Your browser didn't allow the restore."); return; }
+              toast('Restored. Reloading your planner...');
+              setTimeout(function () { window.location.reload(); }, 600);
+            }, 'main'),
+            el('button', { type: 'button', class: 'btn small', text: 'Cancel', onclick: function () { pending = null; status.innerHTML = ''; } })
+          ])
+        ]));
+      });
+    });
+    return el('section', { class: 'card', 'aria-label': 'Back up your planner' }, [
+      el('h3', { text: 'Back up your planner' }),
+      p('Your planner saves in this browser, on this device. Save a backup now and then, so you never lose your work. You can restore it on any phone or computer.', 'hint'),
+      el('div', { class: 'actions' }, [
+        el('button', { type: 'button', class: 'btn main', text: 'Back up my planner', onclick: exportBackup }),
+        pick
+      ]),
+      status
+    ]);
+  }
+
   /* ---------- start here ---------- */
   var CHART_URL = 'https://jovianarchive.com/pages/get-your-human-design-chart';
   function partCard(title, what, promo) {
@@ -870,6 +931,8 @@
         el('button', { type: 'button', class: 'btn main', text: 'Start with my design', onclick: function () { setView('design'); } })
       ])
     ]));
+
+    box.appendChild(backupCard());
 
     box.appendChild(el('div', { class: 'signoff' }, [
       el('div', { text: 'I believe in you. To living our dreams.' }),
@@ -1541,7 +1604,8 @@
       p("If you run a Skool group or another community, add it here. You can focus your whole week on it, and share an offer as your Thursday second post.", 'hint'),
       field({ label: 'Community name', get: function () { return c.name; }, set: function (v) { c.name = v; } }),
       field({ label: 'What happens inside', multi: true, rows: 2, ex: 'Weekly candle-making lives and a place to share what you made.', get: function () { return c.what; }, set: function (v) { c.what = v; } }),
-      field({ label: 'Link', type: 'url', inputmode: 'url', ph: 'https://', get: function () { return c.link; }, set: function (v) { c.link = v; } })
+      field({ label: 'Link', type: 'url', inputmode: 'url', ph: 'https://', get: function () { return c.link; }, set: function (v) { c.link = v; } }),
+      communityItemsEditor()
     ]));
 
     box.appendChild(el('section', { class: 'card', 'aria-label': 'Your story and voice' }, [
@@ -2299,7 +2363,56 @@
         idx++;
       });
     });
+    var draws = drawList(), k = 0;
+    out.forEach(function (it) {
+      if (it.pick !== 'c') return;
+      var s = state.week.slots[it.sl.key];
+      var chosen = s && s.draw && (s.draw === 'any' || draws.indexOf(s.draw) > -1) ? s.draw : '';
+      it.draw = chosen || (draws.length ? draws[k % draws.length] : 'any');
+      k++;
+    });
     return out;
+  }
+  function communityItems() {
+    var c = state.business.community;
+    if (!c.items.length && (c.draws || '').trim()) {
+      var raw = c.draws.trim(), parts = raw.indexOf('\n') > -1 ? raw.split('\n') : raw.split(/\.\s+/);
+      c.items = parts.map(function (x) { return x.replace(/^[\s\u2726*\-\u2022]+/, '').replace(/[.\s]+$/, '').trim(); }).filter(Boolean).slice(0, 6).map(function (n) { return { name: n, what: '', helps: '' }; });
+      c.draws = '';
+    }
+    return c.items;
+  }
+  function itemInfo(name) {
+    var it = communityItems().filter(function (x) { return x.name.trim() === name; })[0];
+    if (!it) return name;
+    return it.name.trim() + (it.what.trim() ? '. What it is: ' + it.what.trim().replace(/[.\s]+$/, '') : '') + (it.helps.trim() ? '. How it helps them: ' + it.helps.trim().replace(/[.\s]+$/, '') : '');
+  }
+  function communityItemsEditor() {
+    var wrap = el('div', { class: 'field' });
+    function draw() {
+      wrap.innerHTML = '';
+      var items = communityItems();
+      wrap.appendChild(el('label', { text: "What's inside that people join for" }));
+      wrap.appendChild(p('People join for one thing they want right now. Add the specific things inside, like a challenge, a training, a live call or a freebie. Each community post promotes one of these.', 'help'));
+      items.forEach(function (it, i) {
+        wrap.appendChild(el('div', { class: 'offer' }, [
+          el('div', { class: 'offer-head' }, [el('span', { class: 't', text: 'Inside ' + (i + 1) }), twoStep('Remove', 'Tap again to remove', function () { items.splice(i, 1); save(); draw(); })]),
+          field({ label: 'Name', ex: '21 Day Recalibrate', get: function () { return it.name; }, set: function (v) { it.name = v; } }),
+          field({ label: 'What it is', multi: true, rows: 2, ex: 'A 21 day reset with a short daily practice and a weekly live call.', get: function () { return it.what; }, set: function (v) { it.what = v; } }),
+          field({ label: 'How it helps them', multi: true, rows: 2, ex: 'They stop running on empty and feel like themselves again by the end of the month.', get: function () { return it.helps; }, set: function (v) { it.helps = v; } })
+        ]));
+      });
+      if (items.length < 6) wrap.appendChild(el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn', text: items.length ? '+ Add another' : '+ Add something inside', onclick: function () { items.push({ name: '', what: '', helps: '' }); save(); draw(); } })]));
+    }
+    draw();
+    return wrap;
+  }
+  function drawList() {
+    var names = communityItems().map(function (x) { return x.name.trim(); }).filter(Boolean);
+    if (names.length) return names;
+    var raw = (state.business.community.draws || '').trim();
+    var parts = raw.indexOf('\n') > -1 ? raw.split('\n') : raw.split(/\.\s+/);
+    return parts.map(function (x) { return x.replace(/^[\s\u2726*\-\u2022]+/, '').replace(/[.\s]+$/, '').trim(); }).filter(Boolean).slice(0, 12);
   }
   function pickLabel(pick) {
     var c = offerChoices().filter(function (x) { return x.id === pick; })[0];
@@ -2343,7 +2456,7 @@
     var offers = b.offers.filter(function (o) { return o.name.trim(); }).map(function (o, i) {
       return joinLines(['Offer ' + (i + 1) + ': ' + o.name.trim(), line('What it is', o.what), line('Type', o.format), line('Price', o.price), line('Link', o.link)]);
     });
-    var com = b.community.name.trim() ? joinLines(['My community: ' + b.community.name.trim(), line('What happens inside', b.community.what), line('Link', b.community.link)]) : '';
+    var com = b.community.name.trim() ? joinLines(['My community: ' + b.community.name.trim(), line('What happens inside', b.community.what), drawList().length ? 'The specific things inside people join for:\n' + drawList().map(function (n) { return '- ' + itemInfo(n); }).join('\n') : null, line('Link', b.community.link)]) : '';
 
     var design = [];
     if (d.done && T) {
@@ -2367,7 +2480,7 @@
     }
 
     var posts = plan.map(function (it, n) {
-      var what = it.pick === 'x' ? 'Something else about my business. Pick what fits best.' : pickLabel(it.pick);
+      var what = it.pick === 'x' ? 'Something else about my business. Pick what fits best.' : it.pick === 'c' ? state.business.community.name.trim() + ', promoting one specific thing inside: ' + (it.draw && it.draw !== 'any' ? itemInfo(it.draw) : 'pick the one thing my soulmate client would want most right now') : pickLabel(it.pick);
       return 'POST ' + (n + 1) + ': ' + DAYS[it.day] + ' ' + fmtDate(weekDate(it.day)) + (it.sl.second ? ' (second post of the day, Skool only)' : '') + '. Promotes: ' + what;
     });
 
@@ -2414,6 +2527,7 @@
       '',
       'HOW TO WRITE EACH POST',
       '- One offer per post. Only promote what that post says it promotes.',
+      b.community.name.trim() ? '- When a post promotes my community, sell the one specific thing inside it, not the community or its features. People join for one thing they want right now. Say what it is and how it helps them in simple words, since they may never have heard of it. Lead with the result it gives them, and make the community simply where it lives. Invite them to come do that one thing.' : null,
       '- Every post starts with a hook title. Skool shows the title first, so it decides whether they stop scrolling. Under 70 characters. Speak to them, not about me. A question they would answer yes to, a moment they know, or a surprising truth. One emoji is fine. Nothing the post does not deliver.',
       "- The first paragraph reels them in with a micro-moment. One or two short sentences that make them think 'wait, that's me.' Never open with my name, 'I offer' or 'I'm excited to announce.'",
       "- Then who it's for, what the offer is, what changes for them, and one clear invitation with the link if I gave one.",
@@ -2525,11 +2639,21 @@
       var sel = el('select', { class: 'select', 'aria-label': 'What this post promotes' }, offerChoices().map(function (c) {
         var o = el('option', { value: c.id, text: c.label }); if (c.id === it.pick) o.selected = true; return o;
       }));
-      sel.addEventListener('change', function () { slotData(it.sl.key).offer = sel.value; save(); });
+      sel.addEventListener('change', function () { slotData(it.sl.key).offer = sel.value; save(); renderKeep(); });
+      var drawSel = null;
+      if (it.pick === 'c') {
+        var dl = drawList();
+        drawSel = el('select', { class: 'select', 'aria-label': 'Which thing inside your community', style: 'margin-top:8px' },
+          dl.map(function (x) { var o = el('option', { value: x, text: 'Inside: ' + x }); if (x === it.draw) o.selected = true; return o; })
+            .concat([(function () { var o = el('option', { value: 'any', text: dl.length ? 'Let Claude pick from my list' : 'Let Claude pick one thing inside' }); if (it.draw === 'any') o.selected = true; return o; })()]));
+        drawSel.addEventListener('change', function () { slotData(it.sl.key).draw = drawSel.value; save(); });
+      }
       listWrap.appendChild(el('div', { class: 'sub' }, [
         el('div', { class: 't', text: DAYS[it.day] + ', ' + fmtDate(weekDate(it.day)) }),
         p((it.sl.second ? 'Second post. ' : '') + 'Share in: ' + shareText(it.sl, it.day), 'hint'),
-        sel
+        sel,
+        drawSel,
+        it.pick === 'c' && !drawList().length ? p("Add the things inside your community in My business so you can choose which one to promote.", 'hint') : null
       ]));
     });
     box.appendChild(el('section', { class: 'card', 'aria-label': 'Your posts this week' }, [
@@ -2677,6 +2801,7 @@
   }
 
   /* ---------- start ---------- */
+  $('backupLink').addEventListener('click', function (e) { e.preventDefault(); setView('start'); setTimeout(function () { var c = document.querySelector('[aria-label="Back up your planner"]'); if (c) c.scrollIntoView({ behavior: 'smooth' }); }, 60); });
   var valid = VIEWS.map(function (v) { return v.id; });
   if (valid.indexOf(state.view) === -1 && !/^day[0-6]$/.test(state.view) && !/^guide-(voice|gates|profile|clients|every)$/.test(state.view)) state.view = 'start';
   if (!state.design.done && /^guide/.test(state.view)) state.view = 'start';
