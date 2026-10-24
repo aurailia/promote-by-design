@@ -30,7 +30,8 @@
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; }
+  body { overscroll-behavior-y: none; }
   body { margin: 0; background: radial-gradient(700px 420px at 92% 6%, rgba(214,173,87,.10), transparent 65%), radial-gradient(1200px 600px at 70% -10%, rgba(184,155,255,.12), transparent 60%), radial-gradient(900px 500px at 0% 100%, rgba(242,155,189,.08), transparent 60%), var(--bg); background-attachment: fixed; color: var(--ink); font-family: var(--ui); font-size: 17px; line-height: 1.65; }
   button, input, textarea, select { font: inherit; color: inherit; }
   button { cursor: pointer; }
@@ -804,6 +805,40 @@
       setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
       toast('Backup saved. Keep it somewhere safe.');
     } catch (e) { toast("The backup couldn't be saved on this browser."); }
+  }
+  function businessText() {
+    var b = state.business, out = [];
+    function add(label, v) { v = (v || '').trim(); if (v) out.push(label + '\n' + v + '\n'); }
+    out.push('MY BUSINESS INFO\nFrom my She Promotes™ Promo Planner, ' + ymd(new Date()) + '\n');
+    add('Your name', b.you); add('Business name', b.name); add('What you do', b.what);
+    add('Who you help', b.who); add("What they're struggling with", b.problem); add('What changes for them after they work with you', b.change); add('Little moments they live', b.moments);
+    b.offers.forEach(function (o, i) {
+      if (!o.name.trim()) return;
+      out.push('OFFER ' + (i + 1) + '\n' + [o.name, o.what, o.format ? 'Type: ' + o.format : '', o.price ? 'Price: ' + o.price : '', o.link ? 'Link: ' + o.link : ''].filter(function (x) { return x && x.trim(); }).join('\n') + '\n');
+    });
+    var c = b.community;
+    if (c.name.trim()) {
+      out.push('YOUR COMMUNITY\n' + [c.name, c.what, c.link ? 'Link: ' + c.link : ''].filter(function (x) { return x && x.trim(); }).join('\n') + '\n');
+      communityItems().forEach(function (it) { if (it.name.trim()) out.push('Inside: ' + it.name.trim() + (it.what.trim() ? '\nWhat it is: ' + it.what.trim() : '') + (it.helps.trim() ? '\nHow it helps them: ' + it.helps.trim() : '') + '\n'); });
+    }
+    add('Why you started', b.story); add('Proof', b.proof);
+    if (b.vibe.length) add('How you sound', b.vibe.join(', '));
+    add('Words and phrases you use', b.words); add('Words to avoid', b.avoid); add('Colors and style for your images', b.look);
+    add('Your website', b.website); add('Your About text', b.about); add('Your best posts', b.best);
+    state.library.forEach(function (x, i) { add('Starred post ' + (i + 1), (x.title ? x.title + '\n' : '') + x.text); });
+    add('Posts you admire', b.admire); add('What you like about them', b.admireWhy);
+    return out.join('\n');
+  }
+  function exportBusinessText() {
+    save();
+    try {
+      var blob = new Blob([businessText()], { type: 'text/plain;charset=utf-8' });
+      var url = URL.createObjectURL(blob);
+      var a = el('a', { href: url, download: 'my-business-info-' + ymd(new Date()) + '.txt', style: 'display:none' });
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+      toast('Your business info is downloaded.');
+    } catch (e) { toast("The file couldn't be saved on this browser."); }
   }
   function importBackup(file, done) {
     if (!file) return;
@@ -1653,6 +1688,15 @@
       } })
     ]));
     box.appendChild(p('Everything saves on this device as you type.', 'saved-note'));
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Keep a copy of your business' }, [
+      el('h3', { text: 'Keep a copy' }),
+      p("So you never have to start over. Back up your planner to restore everything with one tap, or download your business info as a file you can read and keep.", 'hint'),
+      el('div', { class: 'actions' }, [
+        el('button', { type: 'button', class: 'btn main', text: 'Back up my planner', onclick: exportBackup }),
+        el('button', { type: 'button', class: 'btn', text: 'Download my business info', onclick: exportBusinessText })
+      ]),
+      p('To restore a backup, go to Start here and tap Restore a backup.', 'hint')
+    ]));
   }
 
   /* ---------- my promo week ---------- */
@@ -2290,7 +2334,7 @@
       var nm = el('input', { class: 'input', type: 'text', placeholder: 'Group name', 'aria-label': 'Group name' });
       nm.value = g.name;
       nm.addEventListener('input', function () { g.name = nm.value; saveSoon(); });
-      nm.addEventListener('change', function () { save(); renderKeep(); });
+      nm.addEventListener('change', function () { save(); });
       var lk = el('input', { class: 'input', type: 'url', inputmode: 'url', placeholder: 'Link to the group (https://...)', 'aria-label': 'Group link' });
       lk.value = g.url || '';
       lk.addEventListener('input', function () { g.url = lk.value.trim(); saveSoon(); });
@@ -2539,8 +2583,15 @@
       "- No recruiting or MLM language. Don't ask people to DM me. Invite them to comment instead.",
       b.you.trim() ? '- End with my name, ' + b.you.trim() + ', on its own line.' : null,
       '',
-      'FOR EACH POST, ALSO WRITE AN IMAGE PROMPT',
-      'A short prompt I can paste into ChatGPT to make the image. Square 1:1' + (plats.some(function (x) { return x.id === 'instagram'; }) ? ' that also crops well to 4:5 for Instagram' : '') + '. Describe the scene, the mood and my colors. If it has words on it, keep them under 6 words and spell them out exactly. No logos.',
+      'FOR EACH POST, ALSO WRITE AN IMAGE PROMPT FOR A PROMO BANNER',
+      'The image is a banner that sells the offer in that post. I will paste each image prompt into ChatGPT. Every image prompt must:',
+      '- Start with this line: "Before you make this, ask me if I want to add a photo of myself or my product. If I upload one, use it as the main photo."',
+      '- Put the offer name on the banner as the headline, spelled exactly. Under it, one short line with the result they get, 8 words or fewer. If the post promotes something inside my community, the headline is the name of that thing and my community name goes small underneath. Spell out every word that goes on the image, and nothing else goes on it.',
+      '- Be square 1:1' + (plats.some(function (x) { return x.id === 'instagram'; }) ? ', with the important parts centered so it also crops to 4:5 for Instagram' : '') + '.',
+      '- Look like a real promo banner a designer made for a small business. Clean layout, lots of breathing room, big easy-to-read text on a phone. Use real-looking photography of a person, a real setting, or what the offer actually is.',
+      '- Use my colors and style.' + (b.look.trim() ? ' My colors and style: ' + b.look.trim() + '.' : ' Pick simple, warm colors that fit my business.') + ' Name the fonts by style, like an elegant serif headline and a clean sans serif line.',
+      '- Never look AI-made: no glowing sparkles, no sacred geometry, no galaxy or cosmic backgrounds, no floating objects, no fantasy lighting, no extra words, no misspelled text, no logos.',
+      '- Be short enough to paste in one go.',
       platformBlock(plats),
       '',
       'HOW WE WILL WORK TOGETHER (one step at a time, wait for me after each step)',
@@ -2606,7 +2657,10 @@
 
   /* ---------- write my promos ---------- */
   var CLAUDE_URL = 'https://claude.ai/new';
-  var draftReply = '', applyMsg = null;
+  var DRAFT_KEY = 'shePromotesPromoPlannerDraft', applyMsg = null, draftT;
+  var draftReply = '';
+  try { draftReply = window.localStorage.getItem(DRAFT_KEY) || ''; } catch (e) { draftReply = ''; }
+  function saveDraft() { try { if (draftReply) window.localStorage.setItem(DRAFT_KEY, draftReply); else window.localStorage.removeItem(DRAFT_KEY); } catch (e) { /* storage unavailable */ } }
   function renderWrite() {
     var box = $('view'); box.innerHTML = '';
     var w = state.week;
@@ -2694,11 +2748,11 @@
     /* 3. paste back */
     var reply = el('textarea', { class: 'textarea post', placeholder: 'Paste everything from the code block here. Tap the copy button on the code block to grab it all at once.', 'aria-label': "Claude's reply" });
     reply.value = draftReply;
-    reply.addEventListener('input', function () { draftReply = reply.value; });
+    reply.addEventListener('input', function () { draftReply = reply.value; clearTimeout(draftT); draftT = setTimeout(saveDraft, 300); });
     var result = el('div', {});
     if (applyMsg) {
       result.appendChild(el('div', { class: 'callout' }, [
-        el('strong', { text: 'Added ' + applyMsg.added + ' post' + (applyMsg.added === 1 ? '' : 's') + ' and ' + applyMsg.imgs + ' image prompt' + (applyMsg.imgs === 1 ? '' : 's') + '. ' }),
+        el('strong', { text: applyMsg.added ? 'Added ' + applyMsg.added + ' post' + (applyMsg.added === 1 ? '' : 's') + ' and ' + applyMsg.imgs + ' image prompt' + (applyMsg.imgs === 1 ? '' : 's') + '. ' : 'Updated ' + applyMsg.imgs + ' image prompt' + (applyMsg.imgs === 1 ? '' : 's') + '. Your posts stayed the same. ' }),
         (applyMsg.note ? applyMsg.note.trim() + ' ' : '') + 'Next, make your images below.'
       ]));
       applyMsg = null;
@@ -2720,10 +2774,10 @@
         if (!s.offer) s.offer = it.pick;
       });
       if (!save()) { toast('Your planner is full. Remove a few images and try again.'); return; }
-      draftReply = '';
+      draftReply = ''; saveDraft();
       var extra = nums.length > cur.length ? ' The reply had ' + nums.length + ' posts and your plan has ' + cur.length + ', so the extras were left out.' : '';
       var short = added < cur.length ? ' ' + (cur.length - added) + ' post' + (cur.length - added === 1 ? '' : 's') + ' had nothing to fill. Ask for the rest in the same chat and paste again.' : '';
-      applyMsg = { added: added, imgs: imgs, note: short + extra };
+      applyMsg = { added: added, imgs: imgs, note: added ? short + extra : extra };
       renderKeep();
       toast('Your week is filled in. Now make your images.');
     }
@@ -2777,8 +2831,8 @@
         el('h3', { text: 'Step 3: Make your images' }),
         p(made + ' of ' + withPrompts.length + ' images added', 'lead'),
         el('ol', { class: 'steps' }, [
-          el('li', {}, [el('span', { class: 'st', text: 'Copy the image prompt' }), 'Tap Copy image prompt on a post.']),
-          el('li', {}, [el('span', { class: 'st', text: 'Make it in ChatGPT' }), 'Paste it into ChatGPT and download the image it makes.']),
+          el('li', {}, [el('span', { class: 'st', text: 'Copy the image prompt' }), 'Tap Copy image prompt on a post. Have a photo of you or your product handy if you want to use one.']),
+          el('li', {}, [el('span', { class: 'st', text: 'Make it in ChatGPT' }), 'Paste it into ChatGPT. It asks if you want to add your photo first. Then download the banner it makes. If the words come out wrong, ask it to fix the spelling.']),
           el('li', {}, [el('span', { class: 'st', text: 'Upload it here' }), 'Tap + Add image on the same post. It shows up on that day in My promo week.'])
         ]),
         el('div', { class: 'actions' }, [el('a', { class: 'btn small', href: 'https://chatgpt.com/', target: '_blank', rel: 'noopener noreferrer', text: 'Open ChatGPT' })]),
