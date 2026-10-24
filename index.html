@@ -728,7 +728,22 @@
     $('topLabel').textContent = cur ? cur.label : (dm ? DAYS[Number(dm[1])] : (/^guide-/.test(state.view) ? 'Promote by design' : ''));
   }
   function closeMenu() { document.body.classList.remove('nav-open'); $('menuBtn').setAttribute('aria-expanded', 'false'); }
-  function setView(v) {
+  var HASHES = { start: 'start', design: 'my-design', guide: 'promote-by-design', 'guide-voice': 'your-voice', 'guide-gates': 'throat-gates', 'guide-profile': 'profile',
+    'guide-clients': 'who-youre-here-for', 'guide-every': 'every-promo', business: 'my-business', write: 'write-my-promos', week: 'my-promo-week',
+    day0: 'monday', day1: 'tuesday', day2: 'wednesday', day3: 'thursday', day4: 'friday', day5: 'saturday', day6: 'sunday', results: 'my-results' };
+  function viewFromHash(h) {
+    h = (h || '').replace(/^#/, '').toLowerCase();
+    for (var k in HASHES) if (HASHES[k] === h) return k;
+    return null;
+  }
+  function setHash(v) {
+    var h = HASHES[v]; if (!h || location.hash === '#' + h) return;
+    try { history.pushState(null, '', '#' + h); } catch (e) { /* ignore */ }
+  }
+  function onHash() { var v = viewFromHash(location.hash); if (v && v !== state.view) setView(v, true); }
+  window.addEventListener('popstate', onHash);
+  window.addEventListener('hashchange', onHash);
+  function setView(v, fromHash) {
     stopMic();
     if (!/^guide/.test(v) || !/^guide/.test(state.view)) navOpen.guide = null;
     document.body.classList.toggle('on-start', v === 'start');
@@ -744,6 +759,7 @@
     else renderSoon(v);
     closeMenu();
     window.scrollTo(0, 0);
+    if (!fromHash) setHash(v);
   }
   $('menuBtn').addEventListener('click', function () { var o = document.body.classList.toggle('nav-open'); $('menuBtn').setAttribute('aria-expanded', String(o)); });
   $('scrim').addEventListener('click', closeMenu);
@@ -2859,6 +2875,8 @@
   var valid = VIEWS.map(function (v) { return v.id; });
   if (valid.indexOf(state.view) === -1 && !/^day[0-6]$/.test(state.view) && !/^guide-(voice|gates|profile|clients|every)$/.test(state.view)) state.view = 'start';
   if (!state.design.done && /^guide/.test(state.view)) state.view = 'start';
+  var hv = viewFromHash(location.hash);
+  if (hv && !(/^guide/.test(hv) && !state.design.done)) state.view = hv;
   setView(state.view);
 })();
 </script>
