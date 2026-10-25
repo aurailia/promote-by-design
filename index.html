@@ -135,12 +135,13 @@
   .field label { display: block; font-weight: 600; color: var(--ink); font-size: 16px; }
   .field .help { color: var(--muted); font-size: 15px; margin: 2px 0 8px; }
   .field .ex { color: var(--pink); font-size: 14px; font-style: italic; margin: 6px 0 0; }
-  .input, .textarea, .select { width: 100%; background: #0e0d10; border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; color: var(--ink); font-size: 17px; line-height: 1.5; -webkit-appearance: none; appearance: none; }
+  .input, .textarea, .select { width: 100%; background: #fdfbff; border: 1px solid #d9cdea; border-radius: 12px; padding: 11px 13px; color: #1d1a22; color-scheme: light; caret-color: #7d5fd0; font-size: 17px; line-height: 1.5; -webkit-appearance: none; appearance: none; }
   .textarea { min-height: 96px; resize: vertical; }
   .textarea.post { min-height: 220px; }
-  .select { background-image: linear-gradient(45deg, transparent 50%, var(--lav) 50%), linear-gradient(135deg, var(--lav) 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
-  .input:focus, .textarea:focus, .select:focus { outline: none; border-color: var(--lav); box-shadow: 0 0 0 3px rgba(195,169,255,.18); }
-  .input::placeholder, .textarea::placeholder { color: #6f6a72; }
+  .select { background-image: linear-gradient(45deg, transparent 50%, #7d5fd0 50%), linear-gradient(135deg, #7d5fd0 50%, transparent 50%); background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%; background-size: 6px 6px; background-repeat: no-repeat; padding-right: 36px; }
+  .input:focus, .textarea:focus, .select:focus { outline: none; border-color: #9b7be6; box-shadow: 0 0 0 3px rgba(195,169,255,.45); }
+  .input::placeholder, .textarea::placeholder { color: #9a93a3; }
+  .input[readonly], .textarea[readonly] { background: #f4f0f8; }
   .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 560px) { .row2 { grid-template-columns: 1fr; } }
   .offer { border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-top: 16px; background: #141216; }
@@ -1483,7 +1484,14 @@
   }
   function stopMic() { if (activeMic) { try { activeMic.rec.stop(); } catch (e) { /* ignore */ } } }
   function micButton(input, onChange) {
-    if (!SR) return null;
+    if (!SR) {
+      var fb = el('button', { type: 'button', class: 'mic', 'aria-label': 'Speak instead of typing' }, [micIcon(), el('span', { text: 'Speak' })]);
+      fb.addEventListener('click', function () {
+        input.focus();
+        toast('This browser can\'t listen here. Tap the microphone on your keyboard and talk.');
+      });
+      return fb;
+    }
     var label = el('span', { text: 'Speak' });
     var b = el('button', { type: 'button', class: 'mic', 'aria-pressed': 'false', 'aria-label': 'Speak instead of typing' }, [micIcon(), label]);
     function setOn(on) {
