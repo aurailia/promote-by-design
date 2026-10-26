@@ -258,6 +258,18 @@
   .explain { background: rgba(195,169,255,.08); border: 1px solid rgba(195,169,255,.25); border-left: 3px solid var(--lav); border-radius: 0 12px 12px 0; padding: 12px 14px; margin: 6px 0 14px; }
   .explain .xl { display: block; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--lav); margin-bottom: 4px; }
   .explain p { margin: 0; color: #e4dcec; }
+  .rules { list-style: none; padding: 0; margin: 10px 0 0; font-size: 14px; color: var(--muted); }
+  .rules li { margin-bottom: 4px; }
+  .rules strong { color: var(--lav); font-weight: 600; }
+  .libpost { max-height: 7.2em; overflow: hidden; position: relative; white-space: pre-wrap; }
+  .libpost::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2.4em; background: linear-gradient(transparent, #141215); }
+  .libpost.open { max-height: none; }
+  .libpost.open::after { display: none; }
+  .card.placecard h3 { font-size: 36px; font-weight: 700; line-height: 1.1; margin-bottom: 4px; }
+  .card.placecard h3::after { content: ''; display: block; width: 64px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--pink)); margin: 10px 0 12px; }
+  @media (max-width: 480px) { .card.placecard h3 { font-size: 32px; } }
+  .placelist li { margin-bottom: 10px; }
+  .placelist strong { color: var(--pink); }
   .trow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
   .trow:first-child { border-top: none; }
   .trow .tn { font-weight: 600; margin-right: 8px; }
@@ -349,7 +361,7 @@
     if (dow > 2) mon = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 7);
     return ymd(mon);
   }
-  var state = { view: 'start', design: { type: '', authority: '', profile: '', open: [], channels: [], motors: [], gates: [], done: false }, business: blankBusiness(), week: blankWeek(), results: { stats: [], dismissed: [], current: blankResults(), history: [] }, library: [] };
+  var state = { view: 'start', design: { type: '', authority: '', profile: '', open: [], channels: [], motors: [], gates: [], done: false }, business: blankBusiness(), week: blankWeek(), results: { stats: [], dismissed: [], current: blankResults(), history: [] }, library: [], archive: [] };
   try {
     var raw = window.localStorage.getItem(KEY);
     if (raw) {
@@ -376,7 +388,7 @@
           if (Array.isArray(sw.platforms)) w0.platforms = sw.platforms.filter(function (x) { return x === 'instagram' || x === 'facebook' || x === 'tiktok'; });
           if (Array.isArray(sw.done)) w0.done = sw.done.filter(function (n) { return typeof n === 'number'; });
           if (Array.isArray(sw.rest)) w0.rest = sw.rest.filter(function (n) { return typeof n === 'number'; });
-          if (Array.isArray(sw.groups)) w0.groups = sw.groups.filter(function (g) { return g && typeof g.id === 'string'; }).map(function (g) { return { id: g.id, name: typeof g.name === 'string' ? g.name : '', url: typeof g.url === 'string' ? g.url : '', days: Array.isArray(g.days) ? g.days.filter(function (n) { return typeof n === 'number'; }) : [] }; });
+          if (Array.isArray(sw.groups)) w0.groups = sw.groups.filter(function (g) { return g && typeof g.id === 'string'; }).map(function (g) { return { id: g.id, name: typeof g.name === 'string' ? g.name : '', url: typeof g.url === 'string' ? g.url : '', rules: typeof g.rules === 'string' ? g.rules : '', days: Array.isArray(g.days) ? g.days.filter(function (n) { return typeof n === 'number'; }) : [] }; });
           if (sw.slots && typeof sw.slots === 'object') Object.keys(sw.slots).forEach(function (k) {
             var x = sw.slots[k]; if (!x || typeof x !== 'object' || k.indexOf('-g') > -1) return;
             w0.slots[k] = { offer: typeof x.offer === 'string' ? x.offer : '', text: typeof x.text === 'string' ? x.text : '', title: typeof x.title === 'string' ? x.title : '', draw: typeof x.draw === 'string' ? x.draw : '', ig: typeof x.ig === 'string' ? x.ig : '', fb: typeof x.fb === 'string' ? x.fb : '', tt: typeof x.tt === 'string' ? x.tt : '', imgPrompt: typeof x.imgPrompt === 'string' ? x.imgPrompt : '', img: typeof x.img === 'string' ? x.img : '', posted: !!x.posted };
@@ -402,6 +414,11 @@
             return { label: h.label, start: String(h.start || ''), values: vals, names: names, kinds: kinds, days: h.days == null ? null : Number(h.days) || 0, notes: typeof h.notes === 'string' ? h.notes : '' };
           });
         }
+        if (Array.isArray(saved.archive)) state.archive = saved.archive.filter(function (x) { return x && typeof x.text === 'string' && x.text.trim(); }).slice(0, 200).map(function (x) {
+          var o = { id: String(x.id || ('a' + Math.random().toString(36).slice(2))) };
+          ['week', 'day', 'offer', 'title', 'text', 'ig', 'fb', 'tt', 'imgPrompt'].forEach(function (k) { o[k] = typeof x[k] === 'string' ? x[k] : ''; });
+          return o;
+        });
         if (Array.isArray(saved.library)) state.library = saved.library.filter(function (x) { return x && typeof x.text === 'string' && x.text.trim(); }).slice(0, 10).map(function (x) { return { title: typeof x.title === 'string' ? x.title : '', text: x.text, week: typeof x.week === 'string' ? x.week : '' }; });
         if (typeof saved.view === 'string') state.view = saved.view;
       }
@@ -684,7 +701,9 @@
     { id: 'business', label: 'My business' },
     { id: 'write', label: 'Write my promos' },
     { id: 'week', label: 'My promo week' },
-    { id: 'results', label: 'My results' }
+    { id: 'places', label: 'Places to promote' },
+    { id: 'results', label: 'My results' },
+    { id: 'library', label: 'My post library' }
   ];
   var navOpen = {};
   function renderNav() {
@@ -731,7 +750,7 @@
   function closeMenu() { document.body.classList.remove('nav-open'); $('menuBtn').setAttribute('aria-expanded', 'false'); }
   var HASHES = { start: 'start', design: 'my-design', guide: 'promote-by-design', 'guide-voice': 'your-voice', 'guide-gates': 'throat-gates', 'guide-profile': 'profile',
     'guide-clients': 'who-youre-here-for', 'guide-every': 'every-promo', business: 'my-business', write: 'write-my-promos', week: 'my-promo-week',
-    day0: 'monday', day1: 'tuesday', day2: 'wednesday', day3: 'thursday', day4: 'friday', day5: 'saturday', day6: 'sunday', results: 'my-results' };
+    day0: 'monday', day1: 'tuesday', day2: 'wednesday', day3: 'thursday', day4: 'friday', day5: 'saturday', day6: 'sunday', results: 'my-results', library: 'my-post-library', places: 'places-to-promote' };
   function viewFromHash(h) {
     h = (h || '').replace(/^#/, '').toLowerCase();
     for (var k in HASHES) if (HASHES[k] === h) return k;
@@ -756,6 +775,8 @@
     else if (v === 'week') renderWeek();
     else if (v === 'write') renderWrite();
     else if (v === 'results') renderResults();
+    else if (v === 'library') renderLibrary();
+    else if (v === 'places') renderPlaces();
     else if (/^day\d$/.test(v)) renderDay(Number(v.charAt(3)));
     else renderSoon(v);
     closeMenu();
@@ -1595,7 +1616,7 @@
   }
 
   /* ---------- my business ---------- */
-  var FORMATS = ['1:1 Sessions', 'Group Program', 'Course', 'Membership or Skool Community', 'Physical Product', 'Digital Product', 'Live Event or Workshop'];
+  var FORMATS = ['1:1 Sessions', 'Group Program', 'Course', 'Membership or Skool Community', 'Physical Product', 'Digital Product', 'Live Event or Workshop', 'Affiliate Product'];
   var VIBES = ['Warm', 'Direct', 'Playful', 'Calm', 'Bold', 'Nurturing', 'Funny', 'Grounded', 'Sassy', 'Soft'];
   function bizReady() { var b = state.business; return !!(b.name.trim() && b.what.trim() && b.who.trim() && b.offers.some(function (o) { return o.name.trim(); })); }
   function renderBusiness() {
@@ -2088,8 +2109,246 @@
     });
     var noLinks = targets.filter(function (t) { return !t.url; }).length;
     var out = el('div', {}, [wrap]);
+    var withRules = targets.filter(function (t) { return t.rules; });
+    if (withRules.length) out.appendChild(el('ul', { class: 'rules' }, withRules.map(function (t) { return el('li', {}, [el('strong', { text: t.name + ': ' }), t.rules]); })));
     if (noLinks && state.week.groups.length) out.appendChild(p('Add links to your groups in Write my promos and these become buttons that open each group.', 'hint'));
     return out;
+  }
+
+  /* ---------- places to promote ---------- */
+  /* To add a place, copy one block below and fill it in. days: 0 = Monday ... 6 = Sunday (free promo days). */
+  /* tags: free = free to join, daily = promote every day on the starter plan, offers = promote offers and services, skool = promote your Skool community, earn = affiliate program, learn = teaches you to promote. */
+  var PLACE_TAGS = [
+    { id: 'free', label: 'Free to join' },
+    { id: 'daily', label: 'Promote every day' },
+    { id: 'offers', label: 'Share my offers' },
+    { id: 'skool', label: 'Share my Skool community' },
+    { id: 'earn', label: 'Earn as an affiliate' },
+    { id: 'learn', label: 'Learn to promote' }
+  ];
+  var placeFilter = [];
+  var PLACES = [
+    {
+      name: 'Promote With Confidence™',
+      link: 'https://www.skool.com/promote-with-confidence-9625/about?ref=3d4bd5bdcda847a3afcfd90d513f22bf',
+      what: 'A community for business owners, creators, digital sellers and Skool owners to learn marketing psychology, get seen and grow.',
+      free: 'Promote your products, services and Skool community on Mondays and Wednesdays. Network with other entrepreneurs and get free promo guides.',
+      premium: 'Promote every day, plus marketing guides, workbooks and their Promote With Confidence Lab app.',
+      earn: '',
+      tags: ['free', 'offers', 'skool', 'learn'],
+      days: [0, 2]
+    },
+    {
+      name: 'Promote Today',
+      link: 'https://www.skool.com/promote-today-1278/about?ref=3d4bd5bdcda847a3afcfd90d513f22bf',
+      what: 'A community for people who have something to promote and want to get better at getting it seen.',
+      free: 'Learn to build and improve your promos, get real feedback from people, connect with other promoters, and get practical resources and places to promote.',
+      premium: 'Promote inside the community once a day, plus extra resources.',
+      earn: 'Has an affiliate program, so you can earn by sharing it.',
+      tags: ['free', 'earn', 'learn'],
+      days: []
+    },
+    {
+      name: 'Backstage Mastermind',
+      link: 'https://www.skool.com/summit-backstage-mastermind/about?ref=3d4bd5bdcda847a3afcfd90d513f22bf',
+      what: 'A community for people who want to go from unknown online to visible, connected and turning opportunities into clients.',
+      free: 'Promote your offers every day. Connect with creators, speakers and entrepreneurs, find Summit speaking opportunities, join the Roadshow, and apply for community bundles and resources.',
+      premium: 'Your own Premium Highlight inside Backstage, priority for interview spots, three Beyond Vibe Coding courses, and a done-for-you bundle rebranded with your name and referral links.',
+      earn: 'Has an affiliate program. Every member, free or premium, earns 50% commissions by sharing it.',
+      tags: ['free', 'daily', 'offers', 'earn'],
+      days: []
+    },
+    {
+      name: 'The Promo Lounge',
+      link: 'https://www.skool.com/thepromolounge/about?ref=3d4bd5bdcda847a3afcfd90d513f22bf',
+      what: 'A business community where promotion is encouraged, and where you also discover what other members offer.',
+      free: 'One promo post on Tuesdays and one on Saturdays. Browse member offers, comment, and connect with other business owners.',
+      premium: 'Promote any day with no limit. Share offers, freebies, communities, affiliate links, content, launches and more.',
+      earn: 'Has an affiliate program, so you can earn by sharing it.',
+      rules: "It's not meant to be a wall of random links. Share with care and connect with people too.",
+      tags: ['free', 'offers', 'skool', 'earn'],
+      days: [1, 5]
+    },
+    {
+      name: 'Digital Boss Skool Hub',
+      link: 'https://www.skool.com/communityhub/about?ref=3d4bd5bdcda847a3afcfd90d513f22bf',
+      what: 'A community for creators who want to start, grow and actually make money with a Skool community, without paid ads.',
+      freeLabel: 'Standard ($5 a year)',
+      free: 'Promote your Skool community once a day, plus trainings, resources and tools to grow it organically.',
+      premium: 'Promote your community or freebie twice a day and paid offers three times a week, promote daily in their 2.5k+ Facebook group, get entered in the Digital Boss Spotlight, plus AI assistant apps and trainings on AI, Skool and social media.',
+      earn: 'Has an affiliate program, so you can earn by sharing it.',
+      rules: 'On Standard, you can only promote your Skool community, once a day.',
+      tags: ['daily', 'skool', 'earn', 'learn'],
+      days: []
+    },
+    {
+      name: 'Advertise Business Club',
+      link: 'https://www.skool.com/abc/about?ref=3d4bd5bdcda847a3afcfd90d513f22bf',
+      what: 'A free community to get visibility and traffic for your Skool community or business.',
+      free: 'Promote your Skool community every day, plus a free marketing course, a free listing on Skoo.li, and regular cash prize challenges.',
+      premium: 'Boosted visibility and advanced tracking on Skoo.li, with marketing tools coming soon.',
+      earn: 'Has an affiliate program, so you can earn by sharing it.',
+      rules: 'Engage, support others and stay active. Start by sharing your project, your link and your goal.',
+      tags: ['free', 'daily', 'skool', 'earn', 'learn'],
+      days: []
+    },
+    {
+      name: 'The Skool Classifieds',
+      link: 'https://www.skool.com/classifieds/about?ref=3d4bd5bdcda847a3afcfd90d513f22bf',
+      what: 'A public place for Skool owners to advertise their group, grow their audience and connect with other Skool creators. Posts are public and show up in search engines.',
+      freeLabel: 'Standard ($2 a month or $15 a year)',
+      free: 'Promote yourself once a day in the community. Share your Skool group, freebies, YouTube or podcast, ask for feedback, find collabs, and attend free masterclasses hosted by members.',
+      premium: 'Everything in Standard, plus a permanent ad for your Skool group in the classroom, live meet and greets twice a month to network and promote, and the option to host your own masterclass ($27 one time, plus $10 per class).',
+      earn: 'Has an affiliate program, so you can earn by sharing it.',
+      rules: 'For Skool group owners only. One post a day, in any category.',
+      tags: ['daily', 'skool', 'earn', 'learn'],
+      days: []
+    }
+  ];
+  function placeAdded(pl) {
+    var key = pl.link.split('?')[0].replace(/\/about\/?$/, '').toLowerCase();
+    return state.week.groups.some(function (g) {
+      return (g.url || '').split('?')[0].replace(/\/about\/?$/, '').toLowerCase() === key || g.name.trim().toLowerCase() === pl.name.toLowerCase();
+    });
+  }
+  function dayNames(days) {
+    if (!days || !days.length) return 'any day';
+    var n = days.map(function (i) { return DAYS[i]; });
+    return n.length === 1 ? n[0] : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1];
+  }
+  function renderPlaces() {
+    var box = $('view'); box.innerHTML = '';
+    box.appendChild(el('div', {}, [
+      p('More places to share', 'eyebrow'),
+      el('h1', {}, ['Places to ', el('em', { text: 'promote' })]),
+      p('Communities where you can share your offer. The more rooms you post in, the more people see you. Add any of them to your planner in one tap and they show up on your day pages.', 'lede'),
+      p('Some of these links are my affiliate links. If you join through them, I may earn a commission.', 'where')
+    ]));
+    var shown = PLACES.filter(function (pl) {
+      return placeFilter.every(function (t) { return (pl.tags || []).indexOf(t) > -1; });
+    });
+    box.appendChild(el('section', { class: 'card placefilter', 'aria-label': 'Find the right group' }, [
+      el('h3', { text: 'Find the right group' }),
+      p('Tap what matters to you. Tap more than one to narrow it down.', 'hint'),
+      el('div', { class: 'chips', role: 'group', 'aria-label': 'Filter places' }, PLACE_TAGS.map(function (t) {
+        var on = placeFilter.indexOf(t.id) > -1;
+        return el('button', { type: 'button', class: 'chip', 'aria-pressed': String(on), text: t.label, onclick: function () {
+          if (on) placeFilter = placeFilter.filter(function (x) { return x !== t.id; }); else placeFilter.push(t.id);
+          renderPlaces();
+        } });
+      })),
+      el('div', { class: 'actions' }, [
+        el('span', { class: 'hint', 'aria-live': 'polite', text: placeFilter.length ? 'Showing ' + shown.length + ' of ' + PLACES.length + ' groups' : 'Showing all ' + PLACES.length + ' groups' }),
+        placeFilter.length ? el('button', { type: 'button', class: 'btn small', text: 'Clear filters', onclick: function () { placeFilter = []; renderPlaces(); } }) : null
+      ])
+    ]));
+    if (!shown.length) box.appendChild(el('section', { class: 'card soon-card' }, [
+      el('div', { class: 'glyph', 'aria-hidden': 'true', text: '✦' }),
+      p('No group has all of those yet. Try taking one away.', 'hint')
+    ]));
+    shown.forEach(function (pl) {
+      var added = placeAdded(pl);
+      var rows = [];
+      if (pl.free) rows.push(el('li', {}, [el('strong', { text: (pl.freeLabel || 'Free') + ': ' }), pl.free]));
+      if (pl.premium) rows.push(el('li', {}, [el('strong', { text: 'Premium: ' }), pl.premium]));
+      if (pl.earn) rows.push(el('li', {}, [el('strong', { text: 'Earn: ' }), pl.earn]));
+      if (pl.rules) rows.push(el('li', {}, [el('strong', { text: 'Good to know: ' }), pl.rules]));
+      box.appendChild(el('section', { class: 'card placecard', 'aria-label': pl.name }, [
+        el('h3', { text: pl.name }),
+        p(pl.what),
+        el('ul', { class: 'stars placelist' }, rows),
+        el('div', { class: 'actions' }, [
+          el('a', { class: 'btn main', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Join ↗' }),
+          added
+            ? el('span', { class: 'btn', 'aria-disabled': 'true', text: '✓ In my groups' })
+            : el('button', { type: 'button', class: 'btn', text: '+ Add to my groups', onclick: function () {
+                state.week.groups.push({ id: String(Date.now()), name: pl.name, url: pl.link.split('?')[0].replace(/\/about\/?$/, ''), rules: [pl.days && pl.days.length ? 'Free promo days: ' + dayNames(pl.days) + '.' : '', pl.rules || ''].filter(Boolean).join(' '), days: (pl.days || []).slice() });
+                save(); renderNav(); renderPlaces();
+                toast('Added. It shows on ' + dayNames(pl.days) + '. Change its days in Write my promos.');
+              } })
+        ])
+      ]));
+    });
+    box.appendChild(p('Upgraded to premium in one of these groups? Go to Write my promos and tap more days for it.', 'saved-note'));
+  }
+
+  /* ---------- post library ---------- */
+  function archiveWeek() {
+    var w = state.week, label = fmtDate(weekDate(0)), added = 0;
+    planList().forEach(function (it) {
+      var s = w.slots[it.sl.key];
+      if (!s || !(s.text || '').trim()) return;
+      var offer = it.pick === 'c' ? state.business.community.name.trim() + (it.draw && it.draw !== 'any' ? ': ' + it.draw : '') : (it.pick === 'x' ? 'Something else' : pickLabel(it.pick));
+      state.archive.unshift({ id: newId(), week: label, day: DAYS[it.day], offer: offer, title: s.title || '', text: s.text, ig: s.ig || '', fb: s.fb || '', tt: s.tt || '', imgPrompt: s.imgPrompt || '' });
+      added++;
+    });
+    state.archive = state.archive.slice(0, 200);
+    return added;
+  }
+  var libFilter = 'all';
+  function refreshPrompt(x) {
+    var b = state.business;
+    return [
+      "Here's a promo post I used before" + (x.offer ? ' for ' + x.offer : '') + '. Write a fresh version of it for today. Same offer and same voice, with a new hook title, a new first paragraph that reels them in, and a different angle or micro-moment.',
+      b.who.trim() ? 'Who I help: ' + b.who.trim() : '',
+      'Keep my writing rules: simple words, short sentences, like talking to a friend. No em dashes. No hashtags in the main post.',
+      '',
+      'TITLE',
+      x.title || '(no title)',
+      'POST',
+      x.text
+    ].filter(function (l) { return l !== ''; }).join('\n').replace('\nTITLE', '\n\nTITLE');
+  }
+  function renderLibrary() {
+    var box = $('view'); box.innerHTML = '';
+    var A = state.archive;
+    box.appendChild(el('div', {}, [
+      p('Your library', 'eyebrow'),
+      el('h1', {}, ['My post ', el('em', { text: 'library' })]),
+      p('Every post you write is saved here when you start a new week, sorted by offer. Copy one to use again, or let Claude give it a fresh hook and angle.', 'lede')
+    ]));
+    if (!A.length) {
+      box.appendChild(el('section', { class: 'card soon-card' }, [
+        el('div', { class: 'glyph', 'aria-hidden': 'true', text: '✦' }),
+        p("Nothing here yet. When you tap Start my new week in My results, this week's posts move here so you never lose them.", 'hint')
+      ]));
+      return;
+    }
+    var offers = [];
+    A.forEach(function (x) { if (offers.indexOf(x.offer) === -1) offers.push(x.offer); });
+    if (libFilter !== 'all' && offers.indexOf(libFilter) === -1) libFilter = 'all';
+    box.appendChild(el('div', { class: 'chips', role: 'group', 'aria-label': 'Filter by offer', style: 'margin-top:18px' },
+      [{ id: 'all', label: 'All (' + A.length + ')' }].concat(offers.map(function (o) { return { id: o, label: o + ' (' + A.filter(function (x) { return x.offer === o; }).length + ')' }; })).map(function (it) {
+        return el('button', { type: 'button', class: 'chip', 'aria-pressed': String(libFilter === it.id), text: it.label, onclick: function () { libFilter = it.id; renderLibrary(); } });
+      })));
+    A.filter(function (x) { return libFilter === 'all' || x.offer === libFilter; }).forEach(function (x) {
+      var starred = isStarred(x.text);
+      var isLong = x.text.length > 220 || x.text.split('\n').length > 4;
+      var full = el('div', { class: 'libpost' + (isLong ? '' : ' open') }, [p(x.text)]);
+      var more = isLong ? el('button', { type: 'button', class: 'btn small', text: 'Show the whole post' }) : null;
+      if (more) more.addEventListener('click', function () { full.classList.toggle('open'); more.textContent = full.classList.contains('open') ? 'Show less' : 'Show the whole post'; });
+      var copies = [
+        x.title ? el('button', { type: 'button', class: 'btn small', text: 'Copy title', onclick: function () { copyText(x.title, 'Title copied.'); } }) : null,
+        el('button', { type: 'button', class: 'btn small', text: 'Copy post', onclick: function () { copyText(x.text, 'Post copied.'); } }),
+        x.ig ? el('button', { type: 'button', class: 'btn small', text: 'Copy Instagram', onclick: function () { copyText(x.ig, 'Copied for Instagram.'); } }) : null,
+        x.fb ? el('button', { type: 'button', class: 'btn small', text: 'Copy Facebook', onclick: function () { copyText(x.fb, 'Copied for Facebook.'); } }) : null,
+        x.tt ? el('button', { type: 'button', class: 'btn small', text: 'Copy TikTok', onclick: function () { copyText(x.tt, 'Copied for TikTok.'); } }) : null,
+        x.imgPrompt ? el('button', { type: 'button', class: 'btn small', text: 'Copy image prompt', onclick: function () { copyText(x.imgPrompt, 'Image prompt copied.'); } }) : null
+      ];
+      box.appendChild(el('section', { class: 'card', 'aria-label': x.title || 'Saved post' }, [
+        el('div', { class: 'slot-head' }, [
+          el('span', { class: 'pill', text: x.offer }),
+          el('span', { class: 'hint', text: (starred ? '★ ' : '') + x.day + ', week of ' + x.week })
+        ]),
+        el('h3', { text: x.title || 'Untitled post', style: 'margin-top:10px' }),
+        full, more,
+        el('div', { class: 'actions' }, copies),
+        el('div', { class: 'actions' }, [
+          el('button', { type: 'button', class: 'btn small main', text: 'Refresh it with Claude', onclick: function () { copyText(refreshPrompt(x), 'Copied. Paste it into Claude or ChatGPT for a fresh version.'); } }),
+          twoStep('Delete', 'Tap again to delete', function () { state.archive = state.archive.filter(function (y) { return y.id !== x.id; }); save(); renderLibrary(); })
+        ])
+      ]));
+    });
   }
 
   /* ---------- my results ---------- */
@@ -2308,7 +2567,7 @@
 
     box.appendChild(el('section', { class: 'card', 'aria-label': 'Start a new week' }, [
       el('h3', { text: 'Start a new week' }),
-      p("This week's numbers move to Past weeks. Posts, images and completed days clear. Your groups, focus, days off and stats all stay, and the planner moves to the next week.", 'hint'),
+      p("This week's numbers move to Past weeks, and your posts move to My post library. Images and completed days clear. Your groups, focus, days off and stats all stay, and the planner moves to the next week.", 'hint'),
       el('div', { class: 'actions' }, [
         twoStep('Start my new week', 'Tap again to start fresh', function () {
           var vals = {}, names = {}, kinds = {};
@@ -2323,12 +2582,13 @@
           });
           R.history = R.history.slice(0, 52);
           R.current = blankResults();
+          var saved = archiveWeek();
           var pr = w.start.split('-').map(Number);
           var nextMon = ymd(new Date(pr[0], pr[1] - 1, pr[2] + 7));
           var dm = defaultMonday();
           w.start = nextMon > dm ? nextMon : dm;
           w.slots = {}; w.done = [];
-          save(); toast('Your new week is ready. I believe in you.');
+          save(); toast(saved ? 'Your posts are saved in My post library. Your new week is ready.' : 'Your new week is ready. I believe in you.');
           setView('write');
         }, 'main')
       ])
@@ -2367,12 +2627,18 @@
           w.groups.splice(gi, 1); save(); renderKeep();
         })]),
         lk,
+        (function () {
+          var rl = el('textarea', { class: 'textarea', rows: 2, placeholder: "Rules or notes, like 'promo thread only' or 'no links in comments'", 'aria-label': 'Group rules or notes' });
+          rl.value = g.rules || '';
+          rl.addEventListener('input', function () { g.rules = rl.value; saveSoon(); });
+          return rl;
+        })(),
         p('Which days does it allow promos? Leave them all off if any day works.', 'help'),
         chipRow(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }), function (id) { return g.days.indexOf(Number(id)) > -1; }, function (id) { toggleIn(g.days, Number(id)); g.days.sort(); save(); renderKeep(); }, 'Promo days')
       ]));
     });
     grpWrap.appendChild(el('div', { class: 'actions' }, [
-      el('button', { type: 'button', class: 'btn', text: '+ Add a promo group', onclick: function () { w.groups.push({ id: String(Date.now()), name: '', url: '', days: [] }); save(); renderKeep(); } })
+      el('button', { type: 'button', class: 'btn', text: '+ Add a promo group', onclick: function () { w.groups.push({ id: String(Date.now()), name: '', url: '', rules: '', days: [] }); save(); renderKeep(); } })
     ]));
 
     return el('section', { class: 'card', 'aria-label': 'Plan your week' }, [
@@ -2399,7 +2665,7 @@
       ]),
       el('div', { class: 'field' }, [
         el('label', { text: 'Other groups you share in' }),
-        p("You write one post a day and share that same post everywhere. Add each group's name, link and promo days. Each day's page turns them into buttons that open the group, so sharing is tap, paste, next.", 'help'),
+        p("You write one post a day and share that same post everywhere. Add each group's name, link, rules and promo days. Each day's page turns them into buttons that open the group, so sharing is tap, paste, next.", 'help'),
         grpWrap
       ])
     ]);
@@ -2407,10 +2673,10 @@
 
   var SHE_PROMOTES_URL = 'https://www.skool.com/she-promotes-7924';
   function groupsForDay(i) {
-    return state.week.groups.filter(function (g) { return !g.days.length || g.days.indexOf(i) > -1; }).map(function (g) { return { name: g.name.trim() || 'Another promo group', url: /^https?:\/\//i.test(g.url || '') ? g.url : '' }; });
+    return state.week.groups.filter(function (g) { return !g.days.length || g.days.indexOf(i) > -1; }).map(function (g) { return { name: g.name.trim() || 'Another promo group', url: /^https?:\/\//i.test(g.url || '') ? g.url : '', rules: (g.rules || '').trim() }; });
   }
   function shareTargets(sl, day) {
-    var sp = { name: 'She Promotes™', url: SHE_PROMOTES_URL };
+    var sp = { name: 'She Promotes™', url: SHE_PROMOTES_URL, rules: sl.second ? 'Thursday second post. Post it in the \uD83D\uDC96 Premium Promo (Daily) category.' : 'Post it in the \uD83D\uDC96 Premium Promo (Daily) category.' };
     if (sl.second) return [sp];
     return [sp].concat(groupsForDay(day));
   }
@@ -2605,6 +2871,7 @@
       '- 80 to 180 words.',
       '- Skool formatting: no markdown, no asterisks, no hashtags in the main post. You can use ✦ for bullets.',
       "- No recruiting or MLM language. Don't ask people to DM me. Invite them to comment instead.",
+      b.offers.some(function (o) { return o.format === 'Affiliate Product' && o.name.trim(); }) ? "- For an Affiliate Product, it's something I recommend, not something I made. Share why I personally love it and who it's for, and be honest that it's my affiliate link." : null,
       b.you.trim() ? '- End with my name, ' + b.you.trim() + ', on its own line.' : null,
       '',
       'FOR EACH POST, ALSO WRITE AN IMAGE PROMPT FOR A PROMO BANNER',
