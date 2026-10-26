@@ -179,6 +179,11 @@
   .rest-note { color: var(--muted); font-size: 15px; margin-top: 6px; }
   .grp { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-top: 12px; background: #141216; }
   .grp-top { display: flex; gap: 10px; align-items: center; }
+  .grp-head { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+  .grp-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .grp-name strong { font-size: 18px; color: var(--ink); }
+  .grp-rules { font-size: 15px; color: var(--muted); margin: 0; }
+  .grp-acts { margin-top: 0; }
   .grp-top .input { flex: 1; }
 
 
@@ -218,6 +223,21 @@
   .share { display: flex; flex-wrap: wrap; gap: 8px; }
   .sharebtn { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 8px 14px; font-size: 15px; font-weight: 600; text-decoration: none; background: var(--grad); color: #140d1c; }
   .sharebtn .arr { font-size: 13px; }
+  .sharepair { display: inline-flex; align-items: center; gap: 4px; }
+  .grpbtn { border: 0; cursor: pointer; font-family: inherit; }
+  .grpbtn.open { box-shadow: 0 0 0 2px var(--gold); }
+  .grpbtn.shared { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+  .grppanel { margin-top: 12px; border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: #141216; }
+  .grppanel h4 { margin: 0 0 4px; font-size: 18px; color: var(--ink); }
+  .gpbox { background: #fff; color: #1b1620; border-radius: 12px; padding: 12px 14px; font-size: 16px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+  .gpbox.post { max-height: 320px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .findmore { margin-top: 12px; font-size: 15px; }
+  .findmore a { color: var(--lav); }
+  .infobtn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface-2); color: var(--lav); font: italic 600 15px/1 'Cormorant Garamond', Georgia, serif; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .popwrap { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 60; background: rgba(8,6,10,.72); display: flex; align-items: flex-end; justify-content: center; padding: 16px; }
+  .pop { width: 100%; max-width: 520px; max-height: 85vh; overflow-y: auto; -webkit-overflow-scrolling: touch; background: #151218; border: 1px solid var(--line); border-radius: 20px; padding: 22px 20px; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+  .pop h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 30px; line-height: 1.1; margin: 0 0 10px; }
+  @media (min-width: 700px) { .popwrap { align-items: center; } }
   .sharebtn.nolink { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); font-weight: 500; }
   .complete-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding: 16px 18px; border-radius: 16px; border: 1px solid rgba(195,169,255,.4); background: var(--grad-soft); }
   .complete-bar .hint { margin: 0; color: var(--ink); }
@@ -351,7 +371,7 @@
   /* ---------- state ---------- */
   function blankBusiness() { return { you: '', name: '', what: '', who: '', problem: '', change: '', offers: [blankOffer()], community: { name: '', link: '', what: '', draws: '', items: [] }, story: '', proof: '', vibe: [], words: '', avoid: '', look: '', website: '', about: '', best: '', admire: '', admireWhy: '', moments: '' }; }
   function blankOffer() { return { name: '', what: '', format: '', price: '', link: '' }; }
-  function blankWeek() { return { start: defaultMonday(), focus: 'rotate', rest: [], groups: [], slots: {}, done: [], platforms: [] }; }
+  function blankWeek() { return { start: defaultMonday(), focus: 'rotate', rest: [], groups: [], seeded: [], slots: {}, done: [], platforms: [] }; }
   function blankResults() { return { values: {}, notes: '' }; }
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   function ymd(dt) { return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()); }
@@ -388,10 +408,12 @@
           if (Array.isArray(sw.platforms)) w0.platforms = sw.platforms.filter(function (x) { return x === 'instagram' || x === 'facebook' || x === 'tiktok'; });
           if (Array.isArray(sw.done)) w0.done = sw.done.filter(function (n) { return typeof n === 'number'; });
           if (Array.isArray(sw.rest)) w0.rest = sw.rest.filter(function (n) { return typeof n === 'number'; });
-          if (Array.isArray(sw.groups)) w0.groups = sw.groups.filter(function (g) { return g && typeof g.id === 'string'; }).map(function (g) { return { id: g.id, name: typeof g.name === 'string' ? g.name : '', url: typeof g.url === 'string' ? g.url : '', rules: typeof g.rules === 'string' ? g.rules : '', days: Array.isArray(g.days) ? g.days.filter(function (n) { return typeof n === 'number'; }) : [] }; });
+          if (Array.isArray(sw.groups)) w0.groups = sw.groups.filter(function (g) { return g && typeof g.id === 'string'; }).map(function (g) { return { id: g.id, name: typeof g.name === 'string' ? g.name : '', url: typeof g.url === 'string' ? g.url : '', rules: typeof g.rules === 'string' ? g.rules : '', days: Array.isArray(g.days) ? g.days.filter(function (n) { return typeof n === 'number'; }) : [], place: typeof g.place === 'string' ? g.place : '' }; });
+          if (Array.isArray(sw.seeded)) w0.seeded = sw.seeded.filter(function (x) { return typeof x === 'string'; });
           if (sw.slots && typeof sw.slots === 'object') Object.keys(sw.slots).forEach(function (k) {
             var x = sw.slots[k]; if (!x || typeof x !== 'object' || k.indexOf('-g') > -1) return;
-            w0.slots[k] = { offer: typeof x.offer === 'string' ? x.offer : '', text: typeof x.text === 'string' ? x.text : '', title: typeof x.title === 'string' ? x.title : '', draw: typeof x.draw === 'string' ? x.draw : '', ig: typeof x.ig === 'string' ? x.ig : '', fb: typeof x.fb === 'string' ? x.fb : '', tt: typeof x.tt === 'string' ? x.tt : '', imgPrompt: typeof x.imgPrompt === 'string' ? x.imgPrompt : '', img: typeof x.img === 'string' ? x.img : '', posted: !!x.posted };
+            w0.slots[k] = { offer: typeof x.offer === 'string' ? x.offer : '', text: typeof x.text === 'string' ? x.text : '', title: typeof x.title === 'string' ? x.title : '', draw: typeof x.draw === 'string' ? x.draw : '', ig: typeof x.ig === 'string' ? x.ig : '', fb: typeof x.fb === 'string' ? x.fb : '', tt: typeof x.tt === 'string' ? x.tt : '', imgPrompt: typeof x.imgPrompt === 'string' ? x.imgPrompt : '', img: typeof x.img === 'string' ? x.img : '', posted: !!x.posted, opening: typeof x.opening === 'string' ? x.opening : '', body: typeof x.body === 'string' ? x.body : '', gv: {}, shared: Array.isArray(x.shared) ? x.shared.filter(function (y) { return typeof y === 'string'; }) : [] };
+            if (x.gv && typeof x.gv === 'object') Object.keys(x.gv).forEach(function (gk) { var v = x.gv[gk]; if (v && typeof v === 'object') w0.slots[k].gv[gk] = { title: typeof v.title === 'string' ? v.title : '', opening: typeof v.opening === 'string' ? v.opening : '' }; });
           });
         }
         if (saved.results && typeof saved.results === 'object') {
@@ -1786,8 +1808,10 @@
   function slotData(key) {
     var s = state.week.slots[key];
     if (!s) { s = { offer: '', title: '', text: '', ig: '', fb: '', tt: '', imgPrompt: '', img: '', posted: false }; state.week.slots[key] = s; }
-    ['ig', 'fb', 'tt'].forEach(function (k) { if (typeof s[k] !== 'string') s[k] = ''; });
+    ['ig', 'fb', 'tt', 'opening', 'body'].forEach(function (k) { if (typeof s[k] !== 'string') s[k] = ''; });
     if (typeof s.title !== 'string') s.title = '';
+    if (!s.gv || typeof s.gv !== 'object') s.gv = {};
+    if (!Array.isArray(s.shared)) s.shared = [];
     return s;
   }
   function offerChoices() {
@@ -2100,18 +2124,93 @@
     return card;
   }
 
+  function groupPopup(t, opener) {
+    var pl = t.place ? placeByKey(t.place) : null;
+    var old = document.querySelector('.popwrap'); if (old) old.parentNode.removeChild(old);
+    var rows = [];
+    if (pl && pl.what) rows.push(p(pl.what));
+    var info = [];
+    if (t.days) info.push(el('li', {}, [el('strong', { text: 'Promo days: ' }), t.days.length ? dayNames(t.days) : 'Any day']));
+    if (t.rules) info.push(el('li', {}, [el('strong', { text: 'Guidelines: ' }), t.rules]));
+    if (pl && pl.premium) info.push(el('li', {}, [el('strong', { text: 'Premium: ' }), pl.premium]));
+    if (pl && pl.earn) info.push(el('li', {}, [el('strong', { text: 'Earn: ' }), pl.earn]));
+    if (info.length) rows.push(el('ul', { class: 'stars placelist' }, info));
+    var wrap;
+    function close() {
+      if (!wrap.parentNode) return;
+      wrap.parentNode.removeChild(wrap);
+      document.removeEventListener('keydown', onKey);
+      if (opener && opener.focus) opener.focus();
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    var closeBtn = el('button', { type: 'button', class: 'btn small', text: 'Close', onclick: close });
+    var acts = [];
+    if (t.url) acts.push(el('a', { class: 'btn main small', href: t.url, target: '_blank', rel: 'noopener noreferrer', text: 'Go post ↗' }));
+    if (pl) acts.push(el('a', { class: 'btn small', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Join ↗' }));
+    acts.push(closeBtn);
+    var box = el('div', { class: 'pop', role: 'dialog', 'aria-modal': 'true', 'aria-label': t.name }, [
+      el('h3', { text: t.name })
+    ].concat(rows, [el('div', { class: 'actions' }, acts)]));
+    wrap = el('div', { class: 'popwrap' }, [box]);
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(wrap);
+    closeBtn.focus();
+  }
+  function normName(n) { return String(n || '').toLowerCase().replace(/[\u2122\u00ae]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
+  function groupBody(s) {
+    var t = s.text || '', op = (s.opening || '').trim();
+    if (op && t.indexOf(op) === 0) return t.slice(op.length).replace(/^\s+/, '');
+    return (s.body || '').trim() || t;
+  }
+  /* The post for one group: its own opening stitched onto the shared body, or the main post. */
+  function groupPost(s, t) {
+    var v = !t.main && s.gv && s.gv[t.id];
+    if (v && (v.opening || '').trim()) return { title: (v.title || '').trim() || s.title, text: v.opening.trim() + '\n\n' + groupBody(s), own: true };
+    return { title: s.title, text: s.text, own: false };
+  }
+  var openShare = '';
   function shareLinks(sl, day) {
+    var s = slotData(sl.key);
     var targets = shareTargets(sl, day);
-    var wrap = el('div', { class: 'share' });
-    targets.forEach(function (t) {
-      if (t.url) wrap.appendChild(el('a', { class: 'sharebtn', href: t.url, target: '_blank', rel: 'noopener noreferrer' }, [el('span', { text: t.name }), el('span', { class: 'arr', 'aria-hidden': 'true', text: '↗' })]));
-      else wrap.appendChild(el('span', { class: 'sharebtn nolink', text: t.name }));
-    });
-    var noLinks = targets.filter(function (t) { return !t.url; }).length;
-    var out = el('div', {}, [wrap]);
-    var withRules = targets.filter(function (t) { return t.rules; });
-    if (withRules.length) out.appendChild(el('ul', { class: 'rules' }, withRules.map(function (t) { return el('li', {}, [el('strong', { text: t.name + ': ' }), t.rules]); })));
-    if (noLinks && state.week.groups.length) out.appendChild(p('Add links to your groups in Write my promos and these become buttons that open each group.', 'hint'));
+    var out = el('div', { class: 'sharearea' });
+    function draw() {
+      out.innerHTML = '';
+      var wrap = el('div', { class: 'share' });
+      var panel = null;
+      targets.forEach(function (t) {
+        var key = sl.key + '|' + t.id, isOpen = openShare === key, done = s.shared.indexOf(t.id) > -1;
+        var btn = el('button', { type: 'button', class: 'sharebtn grpbtn' + (isOpen ? ' open' : '') + (done ? ' shared' : ''), 'aria-expanded': String(isOpen), onclick: function () {
+          openShare = isOpen ? '' : key; draw();
+          if (!isOpen) { var pn = out.querySelector('.grppanel'); if (pn && pn.scrollIntoView) pn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+        } }, [el('span', { text: (done ? '✓ ' : '') + t.name })]);
+        wrap.appendChild(el('span', { class: 'sharepair' }, [btn,
+          el('button', { type: 'button', class: 'infobtn', 'aria-label': 'Details for ' + t.name, text: 'i', onclick: function (e) { groupPopup(t, e.currentTarget); } })]));
+        if (isOpen) panel = groupPanel(t, done);
+      });
+      out.appendChild(wrap);
+      if (panel) out.appendChild(panel);
+      out.appendChild(el('div', { class: 'findmore' }, [el('a', { href: '#', text: 'Find more groups ›', onclick: function (e) { e.preventDefault(); setView('places'); } })]));
+    }
+    function groupPanel(t, done) {
+      var gp = groupPost(s, t);
+      var kids = [el('h4', { text: t.name })];
+      if (!t.main && !gp.own) kids.push(p(s.text.trim() ? 'No version for this group yet, so this is your main post.' : 'Your post for this day is not written yet.', 'hint'));
+      kids.push(el('div', { class: 'mini', text: 'Title' }), el('div', { class: 'gpbox', text: gp.title || 'No title yet' }),
+        el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn small', text: 'Copy title', onclick: function () { if (!(gp.title || '').trim()) { toast('No title yet.'); return; } copyText(gp.title, 'Title copied.'); } })]),
+        el('div', { class: 'mini', text: 'Post' }), el('div', { class: 'gpbox post', text: gp.text || 'No post yet' }),
+        el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn small', text: 'Copy post', onclick: function () { if (!(gp.text || '').trim()) { toast('No post yet.'); return; } copyText(gp.text, 'Post copied.'); } })]));
+      if (t.main && t.rules) kids.push(p(t.rules, 'hint'));
+      kids.push(el('div', { class: 'actions' }, [
+        t.url ? el('a', { class: 'btn main small', href: t.url, target: '_blank', rel: 'noopener noreferrer', text: 'Open ' + t.name + ' ↗' }) : el('span', { class: 'hint', text: 'Add a link for this group in Write my promos.' }),
+        el('button', { type: 'button', class: 'btn small' + (done ? ' on' : ''), 'aria-pressed': String(done), text: done ? '✓ Shared' : 'Shared', onclick: function () {
+          toggleIn(s.shared, t.id); save(); draw();
+          if (s.shared.indexOf(t.id) > -1) toast('Shared in ' + t.name + '.');
+        } })
+      ]));
+      return el('div', { class: 'grppanel' }, kids);
+    }
+    draw();
     return out;
   }
 
@@ -2145,6 +2244,7 @@
       free: 'Learn to build and improve your promos, get real feedback from people, connect with other promoters, and get practical resources and places to promote.',
       premium: 'Promote inside the community once a day, plus extra resources.',
       earn: 'Has an affiliate program, so you can earn by sharing it.',
+      rules: 'Promoting is for premium members, once a day. On the free plan, use it for feedback and learning.',
       tags: ['free', 'earn', 'learn'],
       days: []
     },
@@ -2205,8 +2305,30 @@
       days: []
     }
   ];
+  function placeKey(pl) { return pl.link.split('?')[0].replace(/\/about\/?$/, '').toLowerCase(); }
+  function placeByKey(k) { return PLACES.filter(function (pl) { return placeKey(pl) === k; })[0]; }
+  function groupFromPlace(pl) {
+    var notes = [];
+    if (pl.freeLabel) notes.push('Needs the ' + pl.freeLabel + ' plan.');
+    if (pl.rules) notes.push(pl.rules);
+    return { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), name: pl.name, url: placeKey(pl), rules: notes.join(' '), days: (pl.days || []).slice(), place: placeKey(pl) };
+  }
+  /* Adds any place from Places to promote that this planner hasn't seen yet. Removed groups stay removed. */
+  function seedPlaces() {
+    var w = state.week, changed = false;
+    if (!Array.isArray(w.seeded)) w.seeded = [];
+    PLACES.forEach(function (pl) {
+      var k = placeKey(pl);
+      if (w.seeded.indexOf(k) > -1) return;
+      w.seeded.push(k); changed = true;
+      var have = w.groups.filter(function (g) { return (g.url || '').split('?')[0].replace(/\/about\/?$/, '').toLowerCase() === k || g.name.trim().toLowerCase() === pl.name.toLowerCase(); })[0];
+      if (have) { if (!have.place) have.place = k; return; }
+      w.groups.push(groupFromPlace(pl));
+    });
+    if (changed) save();
+  }
   function placeAdded(pl) {
-    var key = pl.link.split('?')[0].replace(/\/about\/?$/, '').toLowerCase();
+    var key = placeKey(pl);
     return state.week.groups.some(function (g) {
       return (g.url || '').split('?')[0].replace(/\/about\/?$/, '').toLowerCase() === key || g.name.trim().toLowerCase() === pl.name.toLowerCase();
     });
@@ -2262,7 +2384,7 @@
           added
             ? el('span', { class: 'btn', 'aria-disabled': 'true', text: '✓ In my groups' })
             : el('button', { type: 'button', class: 'btn', text: '+ Add to my groups', onclick: function () {
-                state.week.groups.push({ id: String(Date.now()), name: pl.name, url: pl.link.split('?')[0].replace(/\/about\/?$/, ''), rules: [pl.days && pl.days.length ? 'Free promo days: ' + dayNames(pl.days) + '.' : '', pl.rules || ''].filter(Boolean).join(' '), days: (pl.days || []).slice() });
+                state.week.groups.push(groupFromPlace(pl));
                 save(); renderNav(); renderPlaces();
                 toast('Added. It shows on ' + dayNames(pl.days) + '. Change its days in Write my promos.');
               } })
@@ -2615,30 +2737,46 @@
 
     var grpWrap = el('div', {});
     w.groups.forEach(function (g, gi) {
-      var nm = el('input', { class: 'input', type: 'text', placeholder: 'Group name', 'aria-label': 'Group name' });
-      nm.value = g.name;
-      nm.addEventListener('input', function () { g.name = nm.value; saveSoon(); });
-      nm.addEventListener('change', function () { save(); });
-      var lk = el('input', { class: 'input', type: 'url', inputmode: 'url', placeholder: 'Link to the group (https://...)', 'aria-label': 'Group link' });
-      lk.value = g.url || '';
-      lk.addEventListener('input', function () { g.url = lk.value.trim(); saveSoon(); });
-      grpWrap.appendChild(el('div', { class: 'grp' }, [
-        el('div', { class: 'grp-top' }, [nm, twoStep('Remove', 'Tap again', function () {
-          w.groups.splice(gi, 1); save(); renderKeep();
-        })]),
-        lk,
-        (function () {
-          var rl = el('textarea', { class: 'textarea', rows: 2, placeholder: "Rules or notes, like 'promo thread only' or 'no links in comments'", 'aria-label': 'Group rules or notes' });
-          rl.value = g.rules || '';
-          rl.addEventListener('input', function () { g.rules = rl.value; saveSoon(); });
-          return rl;
-        })(),
-        p('Which days does it allow promos? Leave them all off if any day works.', 'help'),
-        chipRow(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }), function (id) { return g.days.indexOf(Number(id)) > -1; }, function (id) { toggleIn(g.days, Number(id)); g.days.sort(); save(); renderKeep(); }, 'Promo days')
-      ]));
+      var pl = g.place ? placeByKey(g.place) : null;
+      var isOpen = openGroups.indexOf(g.id) > -1;
+      var summary = (g.days.length ? dayNames(g.days) : 'Any day') + (g.url ? '' : ' · No link yet');
+      var head = el('div', { class: 'grp-head' }, [
+        el('div', { class: 'grp-name' }, [
+          el('strong', { text: g.name.trim() || 'New promo group' }),
+          el('span', { class: 'hint', text: summary })
+        ]),
+        el('button', { type: 'button', class: 'btn small', 'aria-expanded': String(isOpen), text: isOpen ? 'Done' : 'Edit', onclick: function () {
+          if (isOpen) openGroups = openGroups.filter(function (x) { return x !== g.id; }); else openGroups.push(g.id);
+          save(); renderKeep();
+        } })
+      ]);
+      var kids = [head];
+      if (!isOpen && (g.rules || '').trim()) kids.push(p(g.rules.trim(), 'grp-rules'));
+      if (!isOpen && pl) kids.push(el('div', { class: 'actions grp-acts' }, [el('a', { class: 'btn small', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Not in it yet? Join ↗' })]));
+      if (isOpen) {
+        var nm = el('input', { class: 'input', type: 'text', placeholder: 'Group name', 'aria-label': 'Group name' });
+        nm.value = g.name;
+        nm.addEventListener('input', function () { g.name = nm.value; saveSoon(); });
+        nm.addEventListener('change', function () { save(); });
+        var lk = el('input', { class: 'input', type: 'url', inputmode: 'url', placeholder: 'Link to the group (https://...)', 'aria-label': 'Group link' });
+        lk.value = g.url || '';
+        lk.addEventListener('input', function () { g.url = lk.value.trim(); saveSoon(); });
+        var rl = el('textarea', { class: 'textarea', rows: 3, placeholder: "Guidelines or notes, like 'promo thread only' or 'no links in comments'", 'aria-label': 'Group guidelines or notes' });
+        rl.value = g.rules || '';
+        rl.addEventListener('input', function () { g.rules = rl.value; saveSoon(); });
+        kids.push(nm, lk, rl,
+          p('Which days can you promote there? Leave them all off if any day works. Upgraded to premium? Turn them all off.', 'help'),
+          chipRow(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }), function (id) { return g.days.indexOf(Number(id)) > -1; }, function (id) { toggleIn(g.days, Number(id)); g.days.sort(); save(); renderKeep(); }, 'Promo days'),
+          el('div', { class: 'actions' }, [twoStep("I'm not in this group", 'Tap again to remove', function () {
+            w.groups.splice(gi, 1); save(); renderKeep();
+            if (pl) toast('Removed. You can add it back from Places to promote.');
+          })]));
+      }
+      grpWrap.appendChild(el('div', { class: 'grp' }, kids));
     });
     grpWrap.appendChild(el('div', { class: 'actions' }, [
-      el('button', { type: 'button', class: 'btn', text: '+ Add a promo group', onclick: function () { w.groups.push({ id: String(Date.now()), name: '', url: '', rules: '', days: [] }); save(); renderKeep(); } })
+      el('button', { type: 'button', class: 'btn', text: '+ Add another group', onclick: function () { var id = String(Date.now()); w.groups.push({ id: id, name: '', url: '', rules: '', days: [], place: '' }); openGroups.push(id); save(); renderKeep(); } }),
+      el('button', { type: 'button', class: 'btn', text: 'Find more groups', onclick: function () { setView('places'); } })
     ]));
 
     return el('section', { class: 'card', 'aria-label': 'Plan your week' }, [
@@ -2664,19 +2802,20 @@
         chipRow(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }), function (id) { return w.rest.indexOf(Number(id)) > -1; }, function (id) { toggleIn(w.rest, Number(id)); save(); renderKeep(); }, 'Days off')
       ]),
       el('div', { class: 'field' }, [
-        el('label', { text: 'Other groups you share in' }),
-        p("You write one post a day and share that same post everywhere. Add each group's name, link, rules and promo days. Each day's page turns them into buttons that open the group, so sharing is tap, paste, next.", 'help'),
+        el('label', { text: 'Your promo groups' }),
+        p("We've already added the promo groups from Places to promote, with their links, promo days and guidelines. Remove any you're not in, and add your own. Each day's page shows only the groups you can post in that day, with a button that opens each one. When you're ready, tap, paste and post.", 'help'),
         grpWrap
       ])
     ]);
   }
 
+  var openGroups = [];
   var SHE_PROMOTES_URL = 'https://www.skool.com/she-promotes-7924';
   function groupsForDay(i) {
-    return state.week.groups.filter(function (g) { return !g.days.length || g.days.indexOf(i) > -1; }).map(function (g) { return { name: g.name.trim() || 'Another promo group', url: /^https?:\/\//i.test(g.url || '') ? g.url : '', rules: (g.rules || '').trim() }; });
+    return state.week.groups.filter(function (g) { return !g.days.length || g.days.indexOf(i) > -1; }).map(function (g) { return { id: g.id, name: g.name.trim() || 'Another promo group', url: /^https?:\/\//i.test(g.url || '') ? g.url : '', rules: (g.rules || '').trim(), days: g.days.slice(), place: g.place || '' }; });
   }
   function shareTargets(sl, day) {
-    var sp = { name: 'She Promotes™', url: SHE_PROMOTES_URL, rules: sl.second ? 'Thursday second post. Post it in the \uD83D\uDC96 Premium Promo (Daily) category.' : 'Post it in the \uD83D\uDC96 Premium Promo (Daily) category.' };
+    var sp = { id: 'sp', main: true, name: 'She Promotes™', url: SHE_PROMOTES_URL, rules: sl.second ? 'Thursday second post. Post it in the \uD83D\uDC96 Premium Promo (Daily) category.' : 'Post it in the \uD83D\uDC96 Premium Promo (Daily) category.' };
     if (sl.second) return [sp];
     return [sp].concat(groupsForDay(day));
   }
@@ -2813,9 +2952,17 @@
       });
     }
 
+    var weekGroups = [], anyGV = false;
     var posts = plan.map(function (it, n) {
+      var gs = it.sl.second ? [] : groupsForDay(it.day);
+      gs.forEach(function (t) { if (!weekGroups.some(function (x) { return x.id === t.id; })) weekGroups.push(t); });
+      if (gs.length) anyGV = true;
       var what = it.pick === 'x' ? 'Something else about my business. Pick what fits best.' : it.pick === 'c' ? state.business.community.name.trim() + ', promoting one specific thing inside: ' + (it.draw && it.draw !== 'any' ? itemInfo(it.draw) : 'pick the one thing my soulmate client would want most right now') : pickLabel(it.pick);
-      return 'POST ' + (n + 1) + ': ' + DAYS[it.day] + ' ' + fmtDate(weekDate(it.day)) + (it.sl.second ? ' (second post of the day, Skool only)' : '') + '. Promotes: ' + what;
+      return 'POST ' + (n + 1) + ': ' + DAYS[it.day] + ' ' + fmtDate(weekDate(it.day)) + (it.sl.second ? ' (second post of the day, Skool only)' : '') + '. Promotes: ' + what + (gs.length ? '\n   Group versions for: ' + gs.map(function (t) { return t.name; }).join(', ') : '\n   No group versions for this post.');
+    });
+    var groupInfo = weekGroups.map(function (t) {
+      var pl = t.place ? placeByKey(t.place) : null;
+      return '- ' + t.name + ': ' + (pl && pl.what ? pl.what : 'A promo group for business owners. No description, so keep its opening right for any business owner.');
     });
 
     return joinLines([
@@ -2845,8 +2992,9 @@
       design.length ? '\nMY HUMAN DESIGN\n' + design.join('\n') : '',
       '',
       'MY WEEK (' + posts.length + ' posts)',
-      'I write one post a day and share that same post in several promo groups' + (state.week.groups.length ? ', including She Promotes™ and ' + state.week.groups.length + ' other group' + (state.week.groups.length === 1 ? '' : 's') : ', starting with She Promotes™') + '. So each post has to work in any promo group.',
+      anyGV ? "I share each post in She Promotes™ and in other promo groups. A lot of the same people are in these groups, so after each main post you'll write a new title and opening for each other group I share it in that day. She Promotes™ always gets the main post." : 'I share each post in She Promotes™, so each post has to work in any promo group.',
       posts.join('\n'),
+      anyGV ? '\nMY PROMO GROUPS (what each one is about, so you can shape its opening)\n' + groupInfo.join('\n') : '',
       '',
       'HOW TO SOUND LIKE ME',
       '- Write like I am talking to one person, my soulmate client, as a friend. Like a voice note, not an ad.',
@@ -2865,6 +3013,7 @@
       '- Every post starts with a hook title. Skool shows the title first, so it decides whether they stop scrolling. Under 70 characters. Speak to them, not about me. A question they would answer yes to, a moment they know, or a surprising truth. One emoji is fine. Nothing the post does not deliver.',
       "- The first paragraph reels them in with a micro-moment. One or two short sentences that make them think 'wait, that's me.' Never open with my name, 'I offer' or 'I'm excited to announce.'",
       "- Then who it's for, what the offer is, what changes for them, and one clear invitation with the link if I gave one.",
+      '- Every post has two parts. The OPENING is the first paragraph that reels them in. The BODY is everything after it. Write the BODY so it reads naturally after any opening, and never refer back to words in the opening.',
       '- Every post gets a different angle and a different first line.',
       "- Don't mention a specific group or promo day in the post, since I'll share it in several places.",
       '- Use what my Human Design says about how I promote, my call to action style, my throat voice and my open centers.',
@@ -2884,33 +3033,48 @@
       '- Never look AI-made: no glowing sparkles, no sacred geometry, no galaxy or cosmic backgrounds, no floating objects, no fantasy lighting, no extra words, no misspelled text, no logos.',
       '- Be short enough to paste in one go.',
       platformBlock(plats),
+      anyGV ? [
+        '',
+        'GROUP VERSIONS (after each main post is approved)',
+        'For every group listed under that post, except She Promotes™, write a new title and a new opening. The BODY stays exactly the same, so I only need the title and opening for each group.',
+        "- Shape each one to what that group is about, using MY PROMO GROUPS above. Think about who's in that room and what they're going through.",
+        "- The opening starts with a question about a small, real moment that group's people live. Then answer it with a short, real experience from my work or my clients' lives, two or three sentences. Never make up results, numbers or stories I didn't give you. If you need a detail, ask me.",
+        '- The opening leads straight into the BODY, so the whole post reads as one.',
+        '- Titles under 70 characters. Every title and every first line is different from the main post and from every other group, so someone in several groups never sees the same thing twice.',
+        "- Same writing rules as the main post. Don't name the group in the post."
+      ].join('\n') : null,
       '',
       'HOW WE WILL WORK TOGETHER (one step at a time, wait for me after each step)',
       "Step 1. Show me 8 to 10 micro-moments you think my soulmate client lives, based on everything above, so I can correct them. Then show me the plan for all " + posts.length + " posts as a simple list: the day, what it promotes, the hook title, and one line on what the post is about. Ask me if these are the posts I want, or if I want to switch any of them out. Wait for my answer. Don't write the posts yet.",
-      "Step 2. When I say the plan is good, write Post 1 only, in full: the title, the post" + (plats.length ? ', the ' + plats.map(function (x) { return x.label; }).join(', ') + ' version' + (plats.length > 1 ? 's' : '') : '') + " and the image prompt. Ask me if I want any changes. When I say it's good, write Post 2. Keep going one post at a time until all " + posts.length + " are done. Don't use a code block in this step.",
+      "Step 2. When I say the plan is good, write Post 1 only, in full: the title, the post" + (plats.length ? ', the ' + plats.map(function (x) { return x.label; }).join(', ') + ' version' + (plats.length > 1 ? 's' : '') : '') + " and the image prompt. Ask me if I want any changes. When I say it's good, " + (anyGV ? 'write the group versions for Post 1 all at once: the title and opening for each group listed under it. I approve them together or ask for tweaks. Then write Post 2. Skip group versions for posts that have none.' : 'write Post 2.') + " Keep going one post at a time until all " + posts.length + " are done. Don't use a code block in this step.",
       "Step 3. After the last post, ask me: \"Are you ready for your copy block?\" When I say yes, give me every final post inside ONE code block so I can copy it in one tap. Inside the code block, use these labels on their own lines and nothing else:",
       '',
       'TITLE 1',
       '(the hook title)',
-      'POST 1',
-      '(the post, starting with the paragraph that reels them in)',
+      'OPENING 1',
+      '(the paragraph that reels them in)',
+      'BODY 1',
+      '(the rest of the post)',
       'IMAGE 1',
       '(the image prompt)',
       plats.map(function (x) { return x.id.toUpperCase() + ' 1\n(the ' + x.label + ' version)'; }).join('\n') || null,
+      anyGV ? 'GROUP TITLE 1: (group name, written exactly as in my list)\n(that group\'s title)\nGROUP OPENING 1: (the same group name)\n(that group\'s opening)\n(then the next group for Post 1, and so on)' : null,
       'TITLE 2',
       '(the hook title)',
-      'POST 2',
-      '(the post)',
+      'OPENING 2',
+      '(the opening)',
+      'BODY 2',
+      '(the rest of the post)',
       'IMAGE 2',
       '(the image prompt)',
       '',
-      "Include all " + posts.length + " posts in order, exactly as I approved them. Don't repeat the title inside the post." + (plats.length ? ' Leave out the platform versions for posts marked Skool only.' : ''),
+      "Include all " + posts.length + " posts in order, exactly as I approved them. Don't repeat the title inside the post." + (plats.length ? ' Leave out the platform versions for posts marked Skool only.' : '') + (anyGV ? ' Include the group title and opening for every group listed under each post, labeled with the post number and the group name. Never write a group version for She Promotes™.' : ''),
       '',
       'Step 4. Right after the code block, give me these instructions, in simple words:',
       '1. Tap the copy button on the code block.',
       '2. Go back to your Promo Planner, open Write my promos, paste it into the Paste your posts box and tap Add to my week.',
       '3. In Make your images, right below it, copy each image prompt, make the image in ChatGPT, download it, and tap + Add image to upload it.',
-      '4. Every day, open that day in My promo week, copy your post' + (plats.length ? ' and your ' + plats.map(function (x) { return x.label; }).join(', ') + ' version' + (plats.length > 1 ? 's' : '') : '') + ', share it everywhere, and mark the day complete.',
+      '4. Every day, open that day in My promo week. Tap each group, copy its title and post, tap Open to go post it, then tap Shared.' + (plats.length ? ' Copy your ' + plats.map(function (x) { return x.label; }).join(', ') + ' version' + (plats.length > 1 ? 's' : '') + ' too.' : '') + ' Mark the day complete when you\'re done.',
       'Then end with three short tips for showing up this week the way my design works best.',
       '',
       'Start with Step 1 now.'
@@ -2920,12 +3084,20 @@
   /* ---------- reading Claude's reply ---------- */
   function parseReply(text) {
     var lines = text.replace(/\r\n?/g, '\n').split('\n');
-    var out = {}, cur = null, kind = null, buf = [];
+    var out = {}, cur = null, kind = null, buf = [], gname = '';
     function flush() {
       if (cur == null) return;
       var body = buf.join('\n').replace(/^\s*\n+/, '').replace(/\s+$/, '');
-      if (!out[cur]) out[cur] = { title: '', text: '', img: '', ig: '', fb: '', tt: '' };
+      if (!out[cur]) out[cur] = { title: '', text: '', img: '', ig: '', fb: '', tt: '', opening: '', body: '', groups: {} };
+      if (kind === 'gtitle' || kind === 'gopening') {
+        var gk = normName(gname); if (!gk) return;
+        if (!out[cur].groups[gk]) out[cur].groups[gk] = { name: gname, title: '', opening: '' };
+        if (kind === 'gtitle') out[cur].groups[gk].title = body.replace(/\s*\n\s*/g, ' ').replace(/^["\u201c]+|["\u201d]+$/g, '');
+        else out[cur].groups[gk].opening = body;
+        return;
+      }
       if (kind === 'post') out[cur].text = body;
+      else if (kind === 'opening' || kind === 'body') out[cur][kind] = body;
       else if (kind === 'ig' || kind === 'fb' || kind === 'tt') out[cur][kind] = body;
       else if (kind === 'title') out[cur].title = body.replace(/\s*\n\s*/g, ' ').replace(/^["\u201c]+|["\u201d]+$/g, '');
       else out[cur].img = body;
@@ -2933,16 +3105,22 @@
     lines.forEach(function (raw) {
       var ln = raw.replace(/^[\s#*>_]+/, '').replace(/[\s*_:]+$/, '');
       if (/^```/.test(raw.trim())) return;
-      var m = /^(TITLE|POST|IMAGE(?: PROMPT)?|INSTAGRAM|FACEBOOK|TIK ?TOK)\s*(\d{1,2})\b(?:\s*[:.)\-|].*)?$/i.exec(ln);
+      var g = /^GROUP\s+(TITLE|OPENING)\s*(\d{1,2})\s*[:.)|\-]?\s*(.+)$/i.exec(ln);
+      if (g) { flush(); cur = Number(g[2]); buf = []; kind = g[1].toLowerCase() === 'title' ? 'gtitle' : 'gopening'; gname = g[3].replace(/^[\s(\[]+|[\s)\]]+$/g, '').trim(); return; }
+      var m = /^(TITLE|POST|OPENING|BODY|IMAGE(?: PROMPT)?|INSTAGRAM|FACEBOOK|TIK ?TOK)\s*(\d{1,2})\b(?:\s*[:.)\-|].*)?$/i.exec(ln);
       if (m) {
         flush(); cur = Number(m[2]); buf = [];
         var lab = m[1].toLowerCase().replace(' ', '');
-        kind = lab === 'post' ? 'post' : lab === 'title' ? 'title' : lab === 'instagram' ? 'ig' : lab === 'facebook' ? 'fb' : lab === 'tiktok' ? 'tt' : 'img';
+        kind = lab === 'post' ? 'post' : lab === 'title' ? 'title' : lab === 'opening' ? 'opening' : lab === 'body' ? 'body' : lab === 'instagram' ? 'ig' : lab === 'facebook' ? 'fb' : lab === 'tiktok' ? 'tt' : 'img';
         return;
       }
       if (cur != null) buf.push(raw);
     });
     flush();
+    Object.keys(out).forEach(function (n) {
+      var o = out[n];
+      if (!o.text && (o.opening || o.body)) o.text = [o.opening, o.body].filter(Boolean).join('\n\n');
+    });
     return out;
   }
 
@@ -3054,11 +3232,26 @@
       var parsed = parseReply(reply.value);
       var nums = Object.keys(parsed);
       if (!nums.length) { toast("I couldn't find POST 1, POST 2 and so on. Paste the whole code block."); return; }
-      var cur = planList(), added = 0, imgs = 0;
+      var cur = planList(), added = 0, imgs = 0, gvs = 0, missed = [];
       cur.forEach(function (it, n) {
         var got = parsed[n + 1]; if (!got) return;
         var s = slotData(it.sl.key);
-        if (got.text) { s.text = got.text; added++; }
+        if (got.text) {
+          s.text = got.text; added++; s.shared = [];
+          s.opening = got.opening || ''; s.body = got.body || '';
+        }
+        var gnames = Object.keys(got.groups || {});
+        if (gnames.length) {
+          s.gv = {};
+          var dayGroups = it.sl.second ? [] : groupsForDay(it.day);
+          gnames.forEach(function (gk) {
+            var gv = got.groups[gk];
+            var match = dayGroups.filter(function (t) { return normName(t.name) === gk; })[0] ||
+              dayGroups.filter(function (t) { var a = normName(t.name); return a && (a.indexOf(gk) > -1 || gk.indexOf(a) > -1); })[0];
+            if (match && (gv.opening || '').trim()) { s.gv[match.id] = { title: gv.title, opening: gv.opening }; gvs++; }
+            else if (missed.indexOf(gv.name) === -1) missed.push(gv.name);
+          });
+        }
         if (got.title) s.title = got.title;
         ['ig', 'fb', 'tt'].forEach(function (k) { if (got[k]) s[k] = got[k]; });
         if (got.img) { s.imgPrompt = got.img; imgs++; }
@@ -3068,7 +3261,9 @@
       draftReply = ''; saveDraft();
       var extra = nums.length > cur.length ? ' The reply had ' + nums.length + ' posts and your plan has ' + cur.length + ', so the extras were left out.' : '';
       var short = added < cur.length ? ' ' + (cur.length - added) + ' post' + (cur.length - added === 1 ? '' : 's') + ' had nothing to fill. Ask for the rest in the same chat and paste again.' : '';
-      applyMsg = { added: added, imgs: imgs, note: added ? short + extra : extra };
+      var gnote = gvs ? ' Plus ' + gvs + ' group version' + (gvs === 1 ? '' : 's') + '.' : '';
+      if (missed.length) gnote += " I couldn't match " + missed.join(', ') + ' to a group on that day, so I left it out.';
+      applyMsg = { added: added, imgs: imgs, note: (added ? short + extra : extra) + gnote };
       renderKeep();
       toast('Your week is filled in. Now make your images.');
     }
@@ -3147,6 +3342,7 @@
 
   /* ---------- start ---------- */
   $('backupLink').addEventListener('click', function (e) { e.preventDefault(); setView('start'); setTimeout(function () { var c = document.querySelector('[aria-label="Back up your planner"]'); if (c) c.scrollIntoView({ behavior: 'smooth' }); }, 60); });
+  seedPlaces();
   var valid = VIEWS.map(function (v) { return v.id; });
   if (valid.indexOf(state.view) === -1 && !/^day[0-6]$/.test(state.view) && !/^guide-(voice|gates|profile|clients|every)$/.test(state.view)) state.view = 'start';
   if (!state.design.done && /^guide/.test(state.view)) state.view = 'start';
