@@ -184,6 +184,7 @@
   .grp-name strong { font-size: 18px; color: var(--ink); }
   .grp-rules { font-size: 15px; color: var(--muted); margin: 0; }
   .grp-acts { margin-top: 0; }
+  .inline-acts { display: inline-flex; flex-wrap: wrap; gap: 8px; }
   .grp-top .input { flex: 1; }
 
 
@@ -2135,6 +2136,7 @@
     if (pl && pl.premium) info.push(el('li', {}, [el('strong', { text: 'Premium: ' }), pl.premium]));
     if (pl && pl.earn) info.push(el('li', {}, [el('strong', { text: 'Earn: ' }), pl.earn]));
     if (info.length) rows.push(el('ul', { class: 'stars placelist' }, info));
+    if (pl) rows.push(p(PLACES_NOTE, 'hint'));
     var wrap;
     function close() {
       if (!wrap.parentNode) return;
@@ -2226,6 +2228,8 @@
     { id: 'learn', label: 'Learn to promote' }
   ];
   var placeFilter = [];
+  var PLACES_CHECKED = 'October 26, 2026';
+  var PLACES_NOTE = 'Details and prices as of ' + PLACES_CHECKED + '. Each group can change its plans, so check their page before you join.';
   var PLACES = [
     {
       name: 'Promote With Confidence™',
@@ -2245,6 +2249,7 @@
       premium: 'Promote inside the community once a day, plus extra resources.',
       earn: 'Has an affiliate program, so you can earn by sharing it.',
       rules: 'Promoting is for premium members, once a day. On the free plan, use it for feedback and learning.',
+      premiumOnly: true,
       tags: ['free', 'earn', 'learn'],
       days: []
     },
@@ -2344,8 +2349,10 @@
       p('More places to share', 'eyebrow'),
       el('h1', {}, ['Places to ', el('em', { text: 'promote' })]),
       p('Communities where you can share your offer. The more rooms you post in, the more people see you. Add any of them to your planner in one tap and they show up on your day pages.', 'lede'),
-      p('Some of these links are my affiliate links. If you join through them, I may earn a commission.', 'where')
+      p('Some of these links are my affiliate links. If you join through them, I may earn a commission.', 'where'),
+      p(PLACES_NOTE, 'where')
     ]));
+    box.appendChild(myGroupsEditor());
     var shown = PLACES.filter(function (pl) {
       return placeFilter.every(function (t) { return (pl.tags || []).indexOf(t) > -1; });
     });
@@ -2382,16 +2389,23 @@
         el('div', { class: 'actions' }, [
           el('a', { class: 'btn main', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Join ↗' }),
           added
-            ? el('span', { class: 'btn', 'aria-disabled': 'true', text: '✓ In my groups' })
+            ? el('span', { class: 'inline-acts' }, [
+                el('span', { class: 'btn', 'aria-disabled': 'true', text: '✓ In my groups' }),
+                twoStep('Remove', 'Tap again to remove', function () {
+                  var k = placeKey(pl);
+                  state.week.groups = state.week.groups.filter(function (g) { return !((g.url || '').split('?')[0].replace(/\/about\/?$/, '').toLowerCase() === k || g.place === k || g.name.trim().toLowerCase() === pl.name.toLowerCase()); });
+                  save(); renderNav(); renderKeep(); toast('Removed from your groups.');
+                })
+              ])
             : el('button', { type: 'button', class: 'btn', text: '+ Add to my groups', onclick: function () {
                 state.week.groups.push(groupFromPlace(pl));
-                save(); renderNav(); renderPlaces();
-                toast('Added. It shows on ' + dayNames(pl.days) + '. Change its days in Write my promos.');
+                save(); renderNav(); renderKeep();
+                toast('Added. It shows on ' + dayNames(pl.days) + '.');
               } })
         ])
       ]));
     });
-    box.appendChild(p('Upgraded to premium in one of these groups? Go to Write my promos and tap more days for it.', 'saved-note'));
+    box.appendChild(p('Upgraded to premium in one of these groups? Tap Edit on it in My promo groups at the top and turn on more days.', 'saved-note'));
   }
 
   /* ---------- post library ---------- */
@@ -2718,28 +2732,17 @@
   }
 
   /* ---------- week setup (used on Write my promos) ---------- */
-  function renderKeep() {
-    var y = window.pageYOffset;
-    if (state.view === 'write') renderWrite(); else renderWeek();
-    window.scrollTo(0, y);
-  }
-  function weekSetupCard() {
+  function myGroupsEditor() {
     var w = state.week;
-    var dateId = 'f' + (++uid);
-    var dateInput = el('input', { id: dateId, class: 'input', type: 'date' });
-    dateInput.value = w.start;
-    dateInput.addEventListener('change', function () {
-      var v = dateInput.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
-      var pr = v.split('-').map(Number), dt = new Date(pr[0], pr[1] - 1, pr[2]);
-      var dow = (dt.getDay() + 6) % 7; dt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - dow);
-      w.start = ymd(dt); save(); renderKeep();
-    });
-
     var grpWrap = el('div', {});
     w.groups.forEach(function (g, gi) {
       var pl = g.place ? placeByKey(g.place) : null;
       var isOpen = openGroups.indexOf(g.id) > -1;
-      var summary = (g.days.length ? dayNames(g.days) : 'Any day') + (g.url ? '' : ' · No link yet');
+      var dayTxt = g.days.length ? 'on ' + dayNames(g.days) : 'any day';
+      var custom = pl && (pl.days || []).join(',') !== g.days.join(',');
+      var summary = custom ? 'You promote here ' + dayTxt + '.' : pl
+        ? (pl.premiumOnly ? 'Free to join. Promoting is premium only.' : pl.freeLabel ? 'Paid to post: ' + pl.freeLabel + '. Promote ' + dayTxt + '.' : 'Free to post ' + dayTxt + '.')
+        : 'Promote ' + dayTxt + '.' + (g.url ? '' : ' No link yet.');
       var head = el('div', { class: 'grp-head' }, [
         el('div', { class: 'grp-name' }, [
           el('strong', { text: g.name.trim() || 'New promo group' }),
@@ -2751,8 +2754,11 @@
         } })
       ]);
       var kids = [head];
-      if (!isOpen && (g.rules || '').trim()) kids.push(p(g.rules.trim(), 'grp-rules'));
-      if (!isOpen && pl) kids.push(el('div', { class: 'actions grp-acts' }, [el('a', { class: 'btn small', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Not in it yet? Join ↗' })]));
+      if (!isOpen) kids.push(el('div', { class: 'actions grp-acts' }, [
+        pl || (g.rules || '').trim() ? el('button', { type: 'button', class: 'btn small', text: 'More info', onclick: function (e) { groupPopup({ name: g.name.trim() || 'Promo group', url: g.url, rules: (g.rules || '').trim(), days: g.days.slice(), place: g.place || '' }, e.currentTarget); } }) : null,
+        pl ? el('a', { class: 'btn small', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Join ↗' }) : null,
+        twoStep('Remove', 'Tap again to remove', function () { w.groups.splice(gi, 1); save(); renderNav(); renderKeep(); toast('Removed from your groups.'); })
+      ]));
       if (isOpen) {
         var nm = el('input', { class: 'input', type: 'text', placeholder: 'Group name', 'aria-label': 'Group name' });
         nm.value = g.name;
@@ -2775,9 +2781,37 @@
       grpWrap.appendChild(el('div', { class: 'grp' }, kids));
     });
     grpWrap.appendChild(el('div', { class: 'actions' }, [
-      el('button', { type: 'button', class: 'btn', text: '+ Add another group', onclick: function () { var id = String(Date.now()); w.groups.push({ id: id, name: '', url: '', rules: '', days: [], place: '' }); openGroups.push(id); save(); renderKeep(); } }),
-      el('button', { type: 'button', class: 'btn', text: 'Find more groups', onclick: function () { setView('places'); } })
+      el('button', { type: 'button', class: 'btn', text: '+ Add your own group', onclick: function () { var id = String(Date.now()); w.groups.push({ id: id, name: '', url: '', rules: '', days: [], place: '' }); openGroups.push(id); save(); renderKeep(); } })
     ]));
+    return el('section', { class: 'card', 'aria-label': 'My promo groups' }, [
+      el('h3', { text: 'My promo groups' }),
+      p(w.groups.length ? 'These show on your day pages, on the days you can post in each one. Tap Edit to change the days, like after you upgrade.' : "No groups yet. Tap + Add to my groups on any community below, or add your own. She Promotes™ is always included.", 'hint'),
+      grpWrap
+    ]);
+  }
+
+  function renderKeep() {
+    var y = window.pageYOffset;
+    if (state.view === 'write') renderWrite(); else if (state.view === 'places') renderPlaces(); else renderWeek();
+    window.scrollTo(0, y);
+  }
+  function weekSetupCard() {
+    var w = state.week;
+    var dateId = 'f' + (++uid);
+    var dateInput = el('input', { id: dateId, class: 'input', type: 'date' });
+    dateInput.value = w.start;
+    dateInput.addEventListener('change', function () {
+      var v = dateInput.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+      var pr = v.split('-').map(Number), dt = new Date(pr[0], pr[1] - 1, pr[2]);
+      var dow = (dt.getDay() + 6) % 7; dt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - dow);
+      w.start = ymd(dt); save(); renderKeep();
+    });
+
+    var names = w.groups.map(function (g) { return g.name.trim(); }).filter(Boolean);
+    var grpWrap = el('div', {}, [
+      p(names.length ? 'You share in She Promotes™, ' + names.join(', ') + '.' : 'You share in She Promotes™. Add more groups to get seen by more people.', 'grp-rules'),
+      el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn', text: names.length ? 'Change my promo groups' : 'Choose my promo groups', onclick: function () { setView('places'); } })])
+    ]);
 
     return el('section', { class: 'card', 'aria-label': 'Plan your week' }, [
       el('h3', { text: 'Plan your week' }),
@@ -2803,7 +2837,7 @@
       ]),
       el('div', { class: 'field' }, [
         el('label', { text: 'Your promo groups' }),
-        p("We've already added the promo groups from Places to promote, with their links, promo days and guidelines. Remove any you're not in, and add your own. Each day's page shows only the groups you can post in that day, with a button that opens each one. When you're ready, tap, paste and post.", 'help'),
+        p('Pick your groups in Places to promote. Each day page shows the groups you can post in that day.', 'help'),
         grpWrap
       ])
     ]);
@@ -3349,7 +3383,6 @@
 
   /* ---------- start ---------- */
   $('backupLink').addEventListener('click', function (e) { e.preventDefault(); setView('start'); setTimeout(function () { var c = document.querySelector('[aria-label="Back up your planner"]'); if (c) c.scrollIntoView({ behavior: 'smooth' }); }, 60); });
-  seedPlaces();
   var valid = VIEWS.map(function (v) { return v.id; });
   if (valid.indexOf(state.view) === -1 && !/^day[0-6]$/.test(state.view) && !/^guide-(voice|gates|profile|clients|every)$/.test(state.view)) state.view = 'start';
   if (!state.design.done && /^guide/.test(state.view)) state.view = 'start';
