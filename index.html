@@ -185,6 +185,7 @@
   .grp-rules { font-size: 15px; color: var(--muted); margin: 0; }
   .grp-acts { margin-top: 0; }
   .inline-acts { display: inline-flex; flex-wrap: wrap; gap: 8px; }
+  .owncard .btn, .inline-acts .btn { white-space: nowrap; }
   .grp-top .input { flex: 1; }
 
 
@@ -2352,14 +2353,18 @@
       p('Some of these links are my affiliate links. If you join through them, I may earn a commission.', 'where'),
       p(PLACES_NOTE, 'where')
     ]));
-    box.appendChild(myGroupsEditor());
+    var w = state.week;
     var shown = PLACES.filter(function (pl) {
-      return placeFilter.every(function (t) { return (pl.tags || []).indexOf(t) > -1; });
+      return placeFilter.every(function (t) { return t === 'mine' ? placeAdded(pl) : (pl.tags || []).indexOf(t) > -1; });
     });
+    var ownGroups = w.groups.filter(function (g) { return !g.place && !PLACES.some(function (pl) { return groupKeyMatch(g, pl); }); });
+    var showOwn = placeFilter.every(function (t) { return t === 'mine'; }) ? ownGroups : [];
+    var total = shown.length + showOwn.length, all = PLACES.length + ownGroups.length;
+    var tags = [{ id: 'mine', label: '✓ In my groups' }].concat(PLACE_TAGS);
     box.appendChild(el('section', { class: 'card placefilter', 'aria-label': 'Find the right group' }, [
       el('h3', { text: 'Find the right group' }),
       p('Tap what matters to you. Tap more than one to narrow it down.', 'hint'),
-      el('div', { class: 'chips', role: 'group', 'aria-label': 'Filter places' }, PLACE_TAGS.map(function (t) {
+      el('div', { class: 'chips', role: 'group', 'aria-label': 'Filter places' }, tags.map(function (t) {
         var on = placeFilter.indexOf(t.id) > -1;
         return el('button', { type: 'button', class: 'chip', 'aria-pressed': String(on), text: t.label, onclick: function () {
           if (on) placeFilter = placeFilter.filter(function (x) { return x !== t.id; }); else placeFilter.push(t.id);
@@ -2367,16 +2372,41 @@
         } });
       })),
       el('div', { class: 'actions' }, [
-        el('span', { class: 'hint', 'aria-live': 'polite', text: placeFilter.length ? 'Showing ' + shown.length + ' of ' + PLACES.length + ' groups' : 'Showing all ' + PLACES.length + ' groups' }),
+        el('span', { class: 'hint', 'aria-live': 'polite', text: placeFilter.length ? 'Showing ' + total + ' of ' + all + ' groups' : 'Showing all ' + all + ' groups' }),
         placeFilter.length ? el('button', { type: 'button', class: 'btn small', text: 'Clear filters', onclick: function () { placeFilter = []; renderPlaces(); } }) : null
+      ]),
+      el('div', { class: 'actions' }, [
+        el('button', { type: 'button', class: 'btn', text: '+ Add a group', onclick: function () {
+          var id = String(Date.now()); w.groups.push({ id: id, name: '', url: '', rules: '', days: [], place: '' }); openGroups.push(id);
+          if (placeFilter.some(function (t) { return t !== 'mine'; })) placeFilter = [];
+          save(); renderNav(); renderPlaces();
+          setTimeout(function () { var c = document.querySelector('.owncard .input'); if (c) { c.scrollIntoView({ block: 'center' }); c.focus(); } }, 30);
+        } }),
+        el('span', { class: 'hint', text: 'A group not on this list? Add it here.' })
       ])
     ]));
-    if (!shown.length) box.appendChild(el('section', { class: 'card soon-card' }, [
+    showOwn.forEach(function (g) {
+      var isOpen = openGroups.indexOf(g.id) > -1;
+      box.appendChild(el('section', { class: 'card placecard owncard', 'aria-label': g.name.trim() || 'Your own group' }, [
+        el('h3', { text: g.name.trim() || 'New group' }),
+        p('Your own group. You promote here ' + (g.days.length ? 'on ' + dayNames(g.days) : 'any day') + '.' + (g.url ? '' : ' Add its link so it opens from your day pages.'), 'hint'),
+        isOpen ? groupEditor(g, true) : null,
+        isOpen ? null : el('div', { class: 'actions' }, [
+          g.url ? el('a', { class: 'btn main', href: g.url, target: '_blank', rel: 'noopener noreferrer', text: 'Open ↗' }) : null,
+          el('span', { class: 'btn', 'aria-disabled': 'true', text: '✓ In my groups' }),
+          el('button', { type: 'button', class: 'btn small', text: 'Edit', onclick: function () { toggleGroupEdit(g.id); } }),
+          twoStep('Remove', 'Tap again to remove', function () { removeGroup(function (x) { return x.id === g.id; }); })
+        ])
+      ]));
+    });
+    if (!total) box.appendChild(el('section', { class: 'card soon-card' }, [
       el('div', { class: 'glyph', 'aria-hidden': 'true', text: '✦' }),
       p('No group has all of those yet. Try taking one away.', 'hint')
     ]));
     shown.forEach(function (pl) {
       var added = placeAdded(pl);
+      var mine = added ? w.groups.filter(function (g) { return groupKeyMatch(g, pl); })[0] : null;
+      var editing = mine && openGroups.indexOf(mine.id) > -1;
       var rows = [];
       if (pl.free) rows.push(el('li', {}, [el('strong', { text: (pl.freeLabel || 'Free') + ': ' }), pl.free]));
       if (pl.premium) rows.push(el('li', {}, [el('strong', { text: 'Premium: ' }), pl.premium]));
@@ -2386,16 +2416,15 @@
         el('h3', { text: pl.name }),
         p(pl.what),
         el('ul', { class: 'stars placelist' }, rows),
-        el('div', { class: 'actions' }, [
+        mine ? p('In your planner: you promote here ' + (mine.days.length ? 'on ' + dayNames(mine.days) : 'any day') + '.', 'hint') : null,
+        editing ? groupEditor(mine, false) : null,
+        editing ? null : el('div', { class: 'actions' }, [
           el('a', { class: 'btn main', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Join ↗' }),
           added
             ? el('span', { class: 'inline-acts' }, [
                 el('span', { class: 'btn', 'aria-disabled': 'true', text: '✓ In my groups' }),
-                twoStep('Remove', 'Tap again to remove', function () {
-                  var k = placeKey(pl);
-                  state.week.groups = state.week.groups.filter(function (g) { return !((g.url || '').split('?')[0].replace(/\/about\/?$/, '').toLowerCase() === k || g.place === k || g.name.trim().toLowerCase() === pl.name.toLowerCase()); });
-                  save(); renderNav(); renderKeep(); toast('Removed from your groups.');
-                })
+                mine ? el('button', { type: 'button', class: 'btn small', text: 'Edit days', onclick: function () { toggleGroupEdit(mine.id); } }) : null,
+                twoStep('Remove', 'Tap again to remove', function () { removeGroup(function (g) { return groupKeyMatch(g, pl); }); })
               ])
             : el('button', { type: 'button', class: 'btn', text: '+ Add to my groups', onclick: function () {
                 state.week.groups.push(groupFromPlace(pl));
@@ -2405,7 +2434,7 @@
         ])
       ]));
     });
-    box.appendChild(p('Upgraded to premium in one of these groups? Tap Edit on it in My promo groups at the top and turn on more days.', 'saved-note'));
+    box.appendChild(p('Upgraded to premium in one of these groups? Tap Edit days on it and turn on more days.', 'saved-note'));
   }
 
   /* ---------- post library ---------- */
@@ -2732,62 +2761,39 @@
   }
 
   /* ---------- week setup (used on Write my promos) ---------- */
-  function myGroupsEditor() {
-    var w = state.week;
-    var grpWrap = el('div', {});
-    w.groups.forEach(function (g, gi) {
-      var pl = g.place ? placeByKey(g.place) : null;
-      var isOpen = openGroups.indexOf(g.id) > -1;
-      var dayTxt = g.days.length ? 'on ' + dayNames(g.days) : 'any day';
-      var custom = pl && (pl.days || []).join(',') !== g.days.join(',');
-      var summary = custom ? 'You promote here ' + dayTxt + '.' : pl
-        ? (pl.premiumOnly ? 'Free to join. Promoting is premium only.' : pl.freeLabel ? 'Paid to post: ' + pl.freeLabel + '. Promote ' + dayTxt + '.' : 'Free to post ' + dayTxt + '.')
-        : 'Promote ' + dayTxt + '.' + (g.url ? '' : ' No link yet.');
-      var head = el('div', { class: 'grp-head' }, [
-        el('div', { class: 'grp-name' }, [
-          el('strong', { text: g.name.trim() || 'New promo group' }),
-          el('span', { class: 'hint', text: summary })
-        ]),
-        el('button', { type: 'button', class: 'btn small', 'aria-expanded': String(isOpen), text: isOpen ? 'Done' : 'Edit', onclick: function () {
-          if (isOpen) openGroups = openGroups.filter(function (x) { return x !== g.id; }); else openGroups.push(g.id);
-          save(); renderKeep();
-        } })
-      ]);
-      var kids = [head];
-      if (!isOpen) kids.push(el('div', { class: 'actions grp-acts' }, [
-        pl || (g.rules || '').trim() ? el('button', { type: 'button', class: 'btn small', text: 'More info', onclick: function (e) { groupPopup({ name: g.name.trim() || 'Promo group', url: g.url, rules: (g.rules || '').trim(), days: g.days.slice(), place: g.place || '' }, e.currentTarget); } }) : null,
-        pl ? el('a', { class: 'btn small', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Join ↗' }) : null,
-        twoStep('Remove', 'Tap again to remove', function () { w.groups.splice(gi, 1); save(); renderNav(); renderKeep(); toast('Removed from your groups.'); })
-      ]));
-      if (isOpen) {
-        var nm = el('input', { class: 'input', type: 'text', placeholder: 'Group name', 'aria-label': 'Group name' });
-        nm.value = g.name;
-        nm.addEventListener('input', function () { g.name = nm.value; saveSoon(); });
-        nm.addEventListener('change', function () { save(); });
-        var lk = el('input', { class: 'input', type: 'url', inputmode: 'url', placeholder: 'Link to the group (https://...)', 'aria-label': 'Group link' });
-        lk.value = g.url || '';
-        lk.addEventListener('input', function () { g.url = lk.value.trim(); saveSoon(); });
-        var rl = el('textarea', { class: 'textarea', rows: 3, placeholder: "Guidelines or notes, like 'promo thread only' or 'no links in comments'", 'aria-label': 'Group guidelines or notes' });
-        rl.value = g.rules || '';
-        rl.addEventListener('input', function () { g.rules = rl.value; saveSoon(); });
-        kids.push(nm, lk, rl,
-          p('Which days can you promote there? Leave them all off if any day works. Upgraded to premium? Turn them all off.', 'help'),
-          chipRow(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }), function (id) { return g.days.indexOf(Number(id)) > -1; }, function (id) { toggleIn(g.days, Number(id)); g.days.sort(); save(); renderKeep(); }, 'Promo days'),
-          el('div', { class: 'actions' }, [twoStep("I'm not in this group", 'Tap again to remove', function () {
-            w.groups.splice(gi, 1); save(); renderKeep();
-            if (pl) toast('Removed. You can add it back from Places to promote.');
-          })]));
-      }
-      grpWrap.appendChild(el('div', { class: 'grp' }, kids));
-    });
-    grpWrap.appendChild(el('div', { class: 'actions' }, [
-      el('button', { type: 'button', class: 'btn', text: '+ Add your own group', onclick: function () { var id = String(Date.now()); w.groups.push({ id: id, name: '', url: '', rules: '', days: [], place: '' }); openGroups.push(id); save(); renderKeep(); } })
-    ]));
-    return el('section', { class: 'card', 'aria-label': 'My promo groups' }, [
-      el('h3', { text: 'My promo groups' }),
-      p(w.groups.length ? 'These show on your day pages, on the days you can post in each one. Tap Edit to change the days, like after you upgrade.' : "No groups yet. Tap + Add to my groups on any community below, or add your own. She Promotes™ is always included.", 'hint'),
-      grpWrap
-    ]);
+  function groupKeyMatch(g, pl) {
+    var k = placeKey(pl);
+    return g.place === k || (g.url || '').split('?')[0].replace(/\/about\/?$/, '').toLowerCase() === k || g.name.trim().toLowerCase() === pl.name.toLowerCase();
+  }
+  function toggleGroupEdit(id) {
+    if (openGroups.indexOf(id) > -1) openGroups = openGroups.filter(function (x) { return x !== id; }); else openGroups.push(id);
+    renderKeep();
+  }
+  /* Edit fields for one group. Place groups only need days and notes. */
+  function groupEditor(g, own) {
+    var kids = [];
+    if (own) {
+      var nm = el('input', { class: 'input', type: 'text', placeholder: 'Group name', 'aria-label': 'Group name' });
+      nm.value = g.name;
+      nm.addEventListener('input', function () { g.name = nm.value; saveSoon(); });
+      nm.addEventListener('change', function () { save(); });
+      var lk = el('input', { class: 'input', type: 'url', inputmode: 'url', placeholder: 'Link to the group (https://...)', 'aria-label': 'Group link' });
+      lk.value = g.url || '';
+      lk.addEventListener('input', function () { g.url = lk.value.trim(); saveSoon(); });
+      kids.push(nm, lk);
+    }
+    var rl = el('textarea', { class: 'textarea', rows: 2, placeholder: "Your notes, like 'promo thread only' or 'no links in comments'", 'aria-label': 'Group notes' });
+    rl.value = g.rules || '';
+    rl.addEventListener('input', function () { g.rules = rl.value; saveSoon(); });
+    kids.push(rl,
+      p('Which days can you promote there? Leave them all off if any day works. Upgraded to premium? Turn them all off.', 'help'),
+      chipRow(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }), function (id) { return g.days.indexOf(Number(id)) > -1; }, function (id) { toggleIn(g.days, Number(id)); g.days.sort(); save(); renderKeep(); }, 'Promo days'),
+      el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn small main', text: 'Done', onclick: function () { save(); toggleGroupEdit(g.id); } })]));
+    return el('div', { class: 'grp' }, kids);
+  }
+  function removeGroup(match) {
+    state.week.groups = state.week.groups.filter(function (g) { return !match(g); });
+    save(); renderNav(); renderKeep(); toast('Removed from your groups.');
   }
 
   function renderKeep() {
