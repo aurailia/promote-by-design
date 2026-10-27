@@ -228,6 +228,10 @@
   .sharepair { display: inline-flex; align-items: center; gap: 4px; }
   .grpbtn { border: 0; cursor: pointer; font-family: inherit; }
   .grpbtn.open { box-shadow: 0 0 0 2px var(--gold); }
+  .postcheck { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid var(--pink); background: transparent; color: #140d1c; font-weight: 800; font-size: 16px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
+  .postcheck.on { background: var(--pink); }
+  .postcount { font-size: 15px; color: var(--muted); margin: 0 0 10px; }
+  .postcount.all { color: var(--pink); font-weight: 600; }
   .grpbtn.shared { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
   .grppanel { margin-top: 12px; border: 1px solid var(--line); border-radius: 16px; padding: 16px; background: #141216; }
   .grppanel h4 { margin: 0 0 4px; font-size: 18px; color: var(--ink); }
@@ -290,6 +294,20 @@
   .card.placecard h3 { font-size: 36px; font-weight: 700; line-height: 1.1; margin-bottom: 4px; }
   .card.placecard h3::after { content: ''; display: block; width: 64px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--pink)); margin: 10px 0 12px; }
   @media (max-width: 480px) { .card.placecard h3 { font-size: 32px; } }
+  .placegrid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+  .placegrid > .card { margin: 0; display: flex; flex-direction: column; }
+  .placegrid > .card > .actions:last-child { margin-top: auto; padding-top: 12px; }
+  .placegrid .inline-acts { display: contents; }
+  .placegrid > .card { transition: border-color .2s, box-shadow .2s, transform .2s; }
+  .placegrid > .card:focus-within { border-color: var(--pink); }
+  @media (hover: hover) {
+    .placegrid > .card:hover { border-color: var(--pink); box-shadow: 0 0 0 1px var(--pink), 0 10px 32px rgba(238,151,180,.22); transform: translateY(-2px); }
+  }
+  @media (prefers-reduced-motion: reduce) { .placegrid > .card { transition: none; } .placegrid > .card:hover { transform: none; } }
+  @media (min-width: 640px) {
+    .placegrid { grid-template-columns: 1fr 1fr; }
+    .placegrid .card.placecard h3 { font-size: 28px; }
+  }
   .placelist li { margin-bottom: 10px; }
   .placelist strong { color: var(--pink); }
   .trow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
@@ -2132,12 +2150,11 @@
     var rows = [];
     if (pl && pl.what) rows.push(p(pl.what));
     var info = [];
-    if (t.days) info.push(el('li', {}, [el('strong', { text: 'Promo days: ' }), t.days.length ? dayNames(t.days) : 'Any day']));
-    if (t.rules) info.push(el('li', {}, [el('strong', { text: 'Guidelines: ' }), t.rules]));
-    if (pl && pl.premium) info.push(el('li', {}, [el('strong', { text: 'Premium: ' }), pl.premium]));
-    if (pl && pl.earn) info.push(el('li', {}, [el('strong', { text: 'Earn: ' }), pl.earn]));
+    if (t.days) info.push(el('li', {}, [el('strong', { text: 'Your promo days: ' }), t.days.length ? dayNames(t.days) : 'Any day']));
+    if (t.rules) info.push(el('li', {}, [el('strong', { text: 'Your notes: ' }), t.rules]));
+    if (pl && pl.earn) info.push(el('li', {}, [el('strong', { text: 'Earn: ' }), 'Has an affiliate program.']));
     if (info.length) rows.push(el('ul', { class: 'stars placelist' }, info));
-    if (pl) rows.push(p(PLACES_NOTE, 'hint'));
+    if (pl) rows.push(p(TIER_NOTE, 'hint'));
     var wrap;
     function close() {
       if (!wrap.parentNode) return;
@@ -2179,6 +2196,8 @@
     var out = el('div', { class: 'sharearea' });
     function draw() {
       out.innerHTML = '';
+      var postedN = targets.filter(function (t) { return s.shared.indexOf(t.id) > -1; }).length;
+      out.appendChild(p(postedN === targets.length ? '✓ Posted in all ' + targets.length + ' groups' : 'Posted in ' + postedN + ' of ' + targets.length + ' groups. Tap ○ when you post.', 'postcount' + (postedN === targets.length ? ' all' : '')));
       var wrap = el('div', { class: 'share' });
       var panel = null;
       targets.forEach(function (t) {
@@ -2186,8 +2205,12 @@
         var btn = el('button', { type: 'button', class: 'sharebtn grpbtn' + (isOpen ? ' open' : '') + (done ? ' shared' : ''), 'aria-expanded': String(isOpen), onclick: function () {
           openShare = isOpen ? '' : key; draw();
           if (!isOpen) { var pn = out.querySelector('.grppanel'); if (pn && pn.scrollIntoView) pn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
-        } }, [el('span', { text: (done ? '✓ ' : '') + t.name })]);
-        wrap.appendChild(el('span', { class: 'sharepair' }, [btn,
+        } }, [el('span', { text: t.name })]);
+        var check = el('button', { type: 'button', class: 'postcheck' + (done ? ' on' : ''), 'aria-pressed': String(done), 'aria-label': (done ? 'Posted in ' : 'Mark posted in ') + t.name, text: done ? '✓' : '', onclick: function () {
+          toggleIn(s.shared, t.id); save(); draw();
+          if (s.shared.indexOf(t.id) > -1) toast('Posted in ' + t.name + '.');
+        } });
+        wrap.appendChild(el('span', { class: 'sharepair' }, [check, btn,
           el('button', { type: 'button', class: 'infobtn', 'aria-label': 'Details for ' + t.name, text: 'i', onclick: function (e) { groupPopup(t, e.currentTarget); } })]));
         if (isOpen) panel = groupPanel(t, done);
       });
@@ -2206,9 +2229,9 @@
       if (t.main && t.rules) kids.push(p(t.rules, 'hint'));
       kids.push(el('div', { class: 'actions' }, [
         t.url ? el('a', { class: 'btn main small', href: t.url, target: '_blank', rel: 'noopener noreferrer', text: 'Open ' + t.name + ' ↗' }) : el('span', { class: 'hint', text: 'Add a link for this group in Write my promos.' }),
-        el('button', { type: 'button', class: 'btn small' + (done ? ' on' : ''), 'aria-pressed': String(done), text: done ? '✓ Shared' : 'Shared', onclick: function () {
+        el('button', { type: 'button', class: 'btn small' + (done ? ' on' : ''), 'aria-pressed': String(done), text: done ? '✓ Posted' : 'Mark as posted', onclick: function () {
           toggleIn(s.shared, t.id); save(); draw();
-          if (s.shared.indexOf(t.id) > -1) toast('Shared in ' + t.name + '.');
+          if (s.shared.indexOf(t.id) > -1) toast('Posted in ' + t.name + '.');
         } })
       ]));
       return el('div', { class: 'grppanel' }, kids);
@@ -2221,7 +2244,6 @@
   /* To add a place, copy one block below and fill it in. days: 0 = Monday ... 6 = Sunday (free promo days). */
   /* tags: free = free to join, daily = promote every day on the starter plan, offers = promote offers and services, skool = promote your Skool community, earn = affiliate program, learn = teaches you to promote. */
   var PLACE_TAGS = [
-    { id: 'free', label: 'Free to join' },
     { id: 'daily', label: 'Promote every day' },
     { id: 'offers', label: 'Share my offers' },
     { id: 'skool', label: 'Share my Skool community' },
@@ -2230,17 +2252,23 @@
   ];
   var placeFilter = [];
   var PLACES_CHECKED = 'October 26, 2026';
-  var PLACES_NOTE = 'Details and prices as of ' + PLACES_CHECKED + '. Each group can change its plans, so check their page before you join.';
+  var PLACES_NOTE = 'Details as of ' + PLACES_CHECKED + '. Groups change their plans, so check their page before you join. Joining for free does not always mean you can promote.';
+  var TIER_NOTE = 'Set your promo days to match the plan you joined. Free and premium members often get different days, so check the group\'s rules and tap Edit days in Places to promote to match.';
+  function placeDays(pl) {
+    if (pl.premiumOnly) return 'Premium members only';
+    var d = pl.days && pl.days.length ? dayNames(pl.days) : 'Any day';
+    return pl.freeLabel ? d + ', on their paid starter plan' : d + ', on the free plan';
+  }
   var PLACES = [
     {
       name: 'Promote With Confidence™',
       link: 'https://www.skool.com/promote-with-confidence-9625/about?ref=3d4bd5bdcda847a3afcfd90d513f22bf',
       what: 'A community for business owners, creators, digital sellers and Skool owners to learn marketing psychology, get seen and grow.',
-      free: 'Promote your products, services and Skool community on Mondays and Wednesdays. Network with other entrepreneurs and get free promo guides.',
+      free: 'Promote your products, services and Skool community on Mondays, Wednesdays and Saturdays. Network with other entrepreneurs and get free promo guides.',
       premium: 'Promote every day, plus marketing guides, workbooks and their Promote With Confidence Lab app.',
       earn: '',
       tags: ['free', 'offers', 'skool', 'learn'],
-      days: [0, 2]
+      days: [0, 2, 5]
     },
     {
       name: 'Promote Today',
@@ -2315,8 +2343,6 @@
   function placeByKey(k) { return PLACES.filter(function (pl) { return placeKey(pl) === k; })[0]; }
   function groupFromPlace(pl) {
     var notes = [];
-    if (pl.freeLabel) notes.push('Needs the ' + pl.freeLabel + ' plan.');
-    if (pl.rules) notes.push(pl.rules);
     return { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), name: pl.name, url: placeKey(pl), rules: notes.join(' '), days: (pl.days || []).slice(), place: placeKey(pl) };
   }
   /* Adds any place from Places to promote that this planner hasn't seen yet. Removed groups stay removed. */
@@ -2351,7 +2377,8 @@
       el('h1', {}, ['Places to ', el('em', { text: 'promote' })]),
       p('Communities where you can share your offer. The more rooms you post in, the more people see you. Add any of them to your planner in one tap and they show up on your day pages.', 'lede'),
       p('Some of these links are my affiliate links. If you join through them, I may earn a commission.', 'where'),
-      p(PLACES_NOTE, 'where')
+      p(PLACES_NOTE, 'where'),
+      el('div', { class: 'callout' }, [el('strong', { text: 'Set your days to your plan. ' }), TIER_NOTE.replace('Set your promo days to match the plan you joined. ', '')])
     ]));
     var w = state.week;
     var shown = PLACES.filter(function (pl) {
@@ -2385,9 +2412,11 @@
         el('span', { class: 'hint', text: 'A group not on this list? Add it here.' })
       ])
     ]));
+    var grid = el('div', { class: 'placegrid' });
+    box.appendChild(grid);
     showOwn.forEach(function (g) {
       var isOpen = openGroups.indexOf(g.id) > -1;
-      box.appendChild(el('section', { class: 'card placecard owncard', 'aria-label': g.name.trim() || 'Your own group' }, [
+      grid.appendChild(el('section', { class: 'card placecard owncard', 'aria-label': g.name.trim() || 'Your own group' }, [
         el('h3', { text: g.name.trim() || 'New group' }),
         p('Your own group. You promote here ' + (g.days.length ? 'on ' + dayNames(g.days) : 'any day') + '.' + (g.url ? '' : ' Add its link so it opens from your day pages.'), 'hint'),
         isOpen ? groupEditor(g, true) : null,
@@ -2407,12 +2436,9 @@
       var added = placeAdded(pl);
       var mine = added ? w.groups.filter(function (g) { return groupKeyMatch(g, pl); })[0] : null;
       var editing = mine && openGroups.indexOf(mine.id) > -1;
-      var rows = [];
-      if (pl.free) rows.push(el('li', {}, [el('strong', { text: (pl.freeLabel || 'Free') + ': ' }), pl.free]));
-      if (pl.premium) rows.push(el('li', {}, [el('strong', { text: 'Premium: ' }), pl.premium]));
-      if (pl.earn) rows.push(el('li', {}, [el('strong', { text: 'Earn: ' }), pl.earn]));
-      if (pl.rules) rows.push(el('li', {}, [el('strong', { text: 'Good to know: ' }), pl.rules]));
-      box.appendChild(el('section', { class: 'card placecard', 'aria-label': pl.name }, [
+      var rows = [el('li', {}, [el('strong', { text: 'Promo days: ' }), placeDays(pl)])];
+      if (pl.earn) rows.push(el('li', {}, [el('strong', { text: 'Earn: ' }), 'Has an affiliate program.']));
+      grid.appendChild(el('section', { class: 'card placecard', 'aria-label': pl.name }, [
         el('h3', { text: pl.name }),
         p(pl.what),
         el('ul', { class: 'stars placelist' }, rows),
@@ -2429,12 +2455,12 @@
             : el('button', { type: 'button', class: 'btn', text: '+ Add to my groups', onclick: function () {
                 state.week.groups.push(groupFromPlace(pl));
                 save(); renderNav(); renderKeep();
-                toast('Added. It shows on ' + dayNames(pl.days) + '.');
+                toast('Added. Check that its days match the plan you joined.');
               } })
         ])
       ]));
     });
-    box.appendChild(p('Upgraded to premium in one of these groups? Tap Edit days on it and turn on more days.', 'saved-note'));
+    box.appendChild(p('Upgraded to premium in one of these groups? Tap Edit days on it and turn on your new days.', 'saved-note'));
   }
 
   /* ---------- post library ---------- */
@@ -2786,7 +2812,7 @@
     rl.value = g.rules || '';
     rl.addEventListener('input', function () { g.rules = rl.value; saveSoon(); });
     kids.push(rl,
-      p('Which days can you promote there? Leave them all off if any day works. Upgraded to premium? Turn them all off.', 'help'),
+      p('Which days can you promote there on the plan you joined? Leave them all off if any day works. Upgraded to premium? Turn on your new days.', 'help'),
       chipRow(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }), function (id) { return g.days.indexOf(Number(id)) > -1; }, function (id) { toggleIn(g.days, Number(id)); g.days.sort(); save(); renderKeep(); }, 'Promo days'),
       el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn small main', text: 'Done', onclick: function () { save(); toggleGroupEdit(g.id); } })]));
     return el('div', { class: 'grp' }, kids);
@@ -3121,7 +3147,7 @@
       '1. Tap the copy button on the code block.',
       '2. Go back to your Promo Planner, open Write my promos, paste it into the Paste your posts box and tap Add to my week.',
       '3. In Make your images, right below it, copy each image prompt, make the image in ChatGPT, download it, and tap + Add image to upload it.',
-      '4. Every day, open that day in My promo week. Tap each group, copy its title and post, tap Open to go post it, then tap Shared.' + (plats.length ? ' Copy your ' + plats.map(function (x) { return x.label; }).join(', ') + ' version' + (plats.length > 1 ? 's' : '') + ' too.' : '') + ' Mark the day complete when you\'re done.',
+      '4. Every day, open that day in My promo week. Tap each group, copy its title and post, tap Open to go post it, then tap the circle next to the group to mark it posted.' + (plats.length ? ' Copy your ' + plats.map(function (x) { return x.label; }).join(', ') + ' version' + (plats.length > 1 ? 's' : '') + ' too.' : '') + ' Mark the day complete when you\'re done.',
       'Then end with three short tips for showing up this week the way my design works best.',
       '',
       'Start with Step 1 now.'
