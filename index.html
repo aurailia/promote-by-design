@@ -114,6 +114,7 @@
   .chip { border: 1px solid var(--line); background: var(--surface-2); border-radius: 999px; padding: 8px 14px; font-size: 15px; color: var(--ink); }
   .chip:hover { border-color: var(--lav); }
   .chip[aria-pressed="true"] { background: var(--grad); border-color: transparent; color: #140d1c; font-weight: 600; }
+  .navdivider { height: 1px; margin: 12px 12px; background: linear-gradient(90deg, rgba(214,173,87,.15), rgba(214,173,87,.9), rgba(214,173,87,.15)); }
   .grp-label { font-weight: 600; font-size: 15px; color: var(--lav); margin: 14px 0 6px; }
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 11px 20px; font-size: 16px; font-weight: 600; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); text-decoration: none; }
   .btn:hover { border-color: var(--lav); }
@@ -751,6 +752,7 @@
   function renderNav() {
     var nav = $('nav'); nav.innerHTML = '';
     VIEWS.forEach(function (v) {
+      if (v.id === 'business') nav.appendChild(el('div', { class: 'navdivider', role: 'separator', 'aria-hidden': 'true' }));
       nav.appendChild(el('button', { type: 'button', class: 'navitem', 'aria-current': state.view === v.id && !(v.id === 'guide' && state.design.done) ? 'page' : 'false', onclick: function () { setView(v.id); } }, [
         el('span', { class: 'gl', 'aria-hidden': 'true', text: '\u2726' }),
         el('span', { text: v.label }),
