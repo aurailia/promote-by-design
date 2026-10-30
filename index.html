@@ -114,7 +114,8 @@
   .chip { border: 1px solid var(--line); background: var(--surface-2); border-radius: 999px; padding: 8px 14px; font-size: 15px; color: var(--ink); }
   .chip:hover { border-color: var(--lav); }
   .chip[aria-pressed="true"] { background: var(--grad); border-color: transparent; color: #140d1c; font-weight: 600; }
-  .navdivider { height: 1px; margin: 12px 12px; background: linear-gradient(90deg, rgba(214,173,87,.15), rgba(214,173,87,.9), rgba(214,173,87,.15)); }
+  .navdivider { height: 1px; margin: 14px 12px 4px; background: linear-gradient(90deg, rgba(214,173,87,.15), rgba(214,173,87,.9), rgba(214,173,87,.15)); }
+  .navsec { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); font-weight: 700; padding: 10px 12px 4px; }
   .grp-label { font-weight: 600; font-size: 15px; color: var(--lav); margin: 14px 0 6px; }
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 999px; padding: 11px 20px; font-size: 16px; font-weight: 600; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); text-decoration: none; }
   .btn:hover { border-color: var(--lav); }
@@ -229,6 +230,14 @@
   .sharepair { display: inline-flex; align-items: center; gap: 4px; }
   .grpbtn { border: 0; cursor: pointer; font-family: inherit; }
   .grpbtn.open { box-shadow: 0 0 0 2px var(--gold); }
+  .vtabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+  .vtab { border: 1px solid var(--line); background: var(--surface-2); color: var(--ink); border-radius: 999px; padding: 8px 14px; font: 600 15px/1.2 inherit; font-family: inherit; cursor: pointer; }
+  .vtab.on { background: var(--grad); color: #140d1c; border-color: transparent; }
+  .vtab.add { background: transparent; color: var(--lav); border-style: dashed; }
+  .vmore { margin-top: 10px; font-size: 15px; color: var(--muted); }
+  .vmore summary { cursor: pointer; }
+  .vmore .input { margin-top: 8px; }
+  .vbadge { font-size: 13px; color: var(--pink); font-weight: 600; white-space: nowrap; }
   .postcheck { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 2px solid var(--pink); background: transparent; color: #140d1c; font-weight: 800; font-size: 16px; line-height: 1; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; }
   .postcheck.on { background: var(--pink); }
   .postcount { font-size: 15px; color: var(--muted); margin: 0 0 10px; }
@@ -299,6 +308,8 @@
   .placegrid > .card { margin: 0; display: flex; flex-direction: column; }
   .placegrid > .card > .actions:last-child { margin-top: auto; padding-top: 12px; }
   .placegrid .inline-acts { display: contents; }
+  .placegrid > .homecard { border-color: rgba(214,173,87,.6); }
+  .placecard .mini { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 14px 0 8px; }
   .placegrid > .card { transition: border-color .2s, box-shadow .2s, transform .2s; }
   .placegrid > .card:focus-within { border-color: var(--pink); }
   @media (hover: hover) {
@@ -402,7 +413,7 @@
     if (dow > 2) mon = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 7);
     return ymd(mon);
   }
-  var state = { view: 'start', design: { type: '', authority: '', profile: '', open: [], channels: [], motors: [], gates: [], done: false }, business: blankBusiness(), week: blankWeek(), results: { stats: [], dismissed: [], current: blankResults(), history: [] }, library: [], archive: [] };
+  var state = { view: 'start', design: { type: '', authority: '', profile: '', open: [], channels: [], motors: [], gates: [], done: false }, business: blankBusiness(), soul: { help: '', called: '', story: '', sources: '', sheet: '', include: true }, week: blankWeek(), results: { stats: [], dismissed: [], current: blankResults(), history: [] }, library: [], archive: [] };
   try {
     var raw = window.localStorage.getItem(KEY);
     if (raw) {
@@ -422,6 +433,10 @@
           if (sb.community && typeof sb.community === 'object') if (sb.community && Array.isArray(sb.community.items)) b0.community.items = sb.community.items.filter(function (x) { return x && typeof x === 'object'; }).slice(0, 6).map(function (x) { return { name: String(x.name || ''), what: String(x.what || ''), helps: String(x.helps || '') }; });
           if (sb.community && typeof sb.community === 'object') ['name', 'link', 'what', 'draws'].forEach(function (k) { if (typeof sb.community[k] === 'string') b0.community[k] = sb.community[k]; });
         }
+        if (saved.soul && typeof saved.soul === 'object') {
+          ['help', 'called', 'story', 'sources', 'sheet'].forEach(function (k) { if (typeof saved.soul[k] === 'string') state.soul[k] = saved.soul[k]; });
+          state.soul.include = saved.soul.include !== false;
+        }
         if (saved.week && typeof saved.week === 'object') {
           var w0 = state.week, sw = saved.week;
           if (typeof sw.start === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(sw.start)) w0.start = sw.start;
@@ -430,12 +445,18 @@
           if (Array.isArray(sw.done)) w0.done = sw.done.filter(function (n) { return typeof n === 'number'; });
           if (Array.isArray(sw.rest)) w0.rest = sw.rest.filter(function (n) { return typeof n === 'number'; });
           if (Array.isArray(sw.groups)) w0.groups = sw.groups.filter(function (g) { return g && typeof g.id === 'string'; }).map(function (g) { return { id: g.id, name: typeof g.name === 'string' ? g.name : '', url: typeof g.url === 'string' ? g.url : '', rules: typeof g.rules === 'string' ? g.rules : '', days: Array.isArray(g.days) ? g.days.filter(function (n) { return typeof n === 'number'; }) : [], place: typeof g.place === 'string' ? g.place : '' }; });
+          if (sw.daysV2) w0.daysV2 = true;
           if (Array.isArray(sw.seeded)) w0.seeded = sw.seeded.filter(function (x) { return typeof x === 'string'; });
           if (sw.slots && typeof sw.slots === 'object') Object.keys(sw.slots).forEach(function (k) {
             var x = sw.slots[k]; if (!x || typeof x !== 'object' || k.indexOf('-g') > -1) return;
-            w0.slots[k] = { offer: typeof x.offer === 'string' ? x.offer : '', text: typeof x.text === 'string' ? x.text : '', title: typeof x.title === 'string' ? x.title : '', draw: typeof x.draw === 'string' ? x.draw : '', ig: typeof x.ig === 'string' ? x.ig : '', fb: typeof x.fb === 'string' ? x.fb : '', tt: typeof x.tt === 'string' ? x.tt : '', imgPrompt: typeof x.imgPrompt === 'string' ? x.imgPrompt : '', img: typeof x.img === 'string' ? x.img : '', posted: !!x.posted, opening: typeof x.opening === 'string' ? x.opening : '', body: typeof x.body === 'string' ? x.body : '', gv: {}, shared: Array.isArray(x.shared) ? x.shared.filter(function (y) { return typeof y === 'string'; }) : [] };
-            if (x.gv && typeof x.gv === 'object') Object.keys(x.gv).forEach(function (gk) { var v = x.gv[gk]; if (v && typeof v === 'object') w0.slots[k].gv[gk] = { title: typeof v.title === 'string' ? v.title : '', opening: typeof v.opening === 'string' ? v.opening : '' }; });
+            w0.slots[k] = cleanSlot(x);
           });
+          if (w0.slots['3-sp-1']) {
+            var sec = w0.slots['3-sp-1'], fst = w0.slots['3-sp-0'] || cleanSlot({});
+            sec.versions.forEach(function (v) { if ((v.text || '').trim()) { v.name = 'Version ' + (fst.versions.length + 1); fst.versions.push(v); } });
+            fst.versions = fst.versions.filter(function (v, n) { return n === 0 || (v.text || '').trim(); });
+            w0.slots['3-sp-0'] = fst; delete w0.slots['3-sp-1'];
+          }
         }
         if (saved.results && typeof saved.results === 'object') {
           var sr = saved.results, R0 = state.results;
@@ -514,7 +535,7 @@
         'Keep a few promos written ahead for the days nothing sparks.',
         'Stay in your groups long enough to build momentum. Showing up steadily works in your favor.'
       ],
-      groups: "Tuesday's What Do You Need? thread is made for you. Someone asks, and you respond with your offer when it's a real fit.",
+      groups: "Comment on other members' posts. When someone shares something your offer fits, respond. That's your sweet spot.",
       cta: "Ask, then answer. 'Is this you? Tell me below and I'll share more.'",
       off: 'Frustration is your signal. If promoting feels like a chore, you probably started from a should. Pick the offer that excites you today, or come back tomorrow.'
     },
@@ -530,7 +551,7 @@
         "Tell people when you pivot. A quick 'I've changed this up' keeps them with you.",
         'If your authority is emotional, some days nothing flows. Use a promo you wrote ahead.'
       ],
-      groups: 'Promo days suit you. Write it, post it, and come back for the comments. Friday Collab Corner is a great home for your fast ideas.',
+      groups: 'Write it, post it, and come back for the comments. Friday Collab Corner is a great home for your fast ideas.',
       cta: "Say what you're doing, then invite. 'I'm opening three spots this month. Grab yours here.'",
       off: "Frustration and anger are your signals. If you keep starting promos and dropping them, slow down and check what you're actually responding to."
     },
@@ -545,7 +566,7 @@
         "You don't have to promote every day just because you can. Pick the days your energy is there and rest on the others.",
         "Give people an easy way to invite you in. 'Ask me anything about...' works well."
       ],
-      groups: "Tuesday's What Do You Need? thread and Friday's Collab Corner are where people recognize you. Spend time there and your promo days get easier.",
+      groups: "Friday's Collab Corner and the comments on other members' posts are where people recognize you. Spend time there and your promos get easier.",
       cta: "Invite the conversation. 'Ask me anything about ___ in the comments.'",
       off: "Bitterness is your signal. If you feel bitter that nobody's buying, you may be pushing before you're seen. Go back to showing up in the threads and let people find you."
     },
@@ -686,7 +707,7 @@
   };
   var OPEN_THROAT = {
     intro: "Your voice is flexible and changes with the room you're in. You might sound a little different in every group, and that's part of your gift. You can also feel pressure to speak, to promote just so people notice you. That pressure is where burnout starts.",
-    para: "Your promos land hardest when there's an opening. Someone asks for what you offer in the What Do You Need? thread. Someone tags you. Someone says 'tell me more.' That's your moment.",
+    para: "Your promos land hardest when there's an opening. Someone asks for what you offer in a comment. Someone tags you. Someone says 'tell me more.' That's your moment.",
     tips: [
       'Replying in threads often works better than posting into a quiet feed.',
       'Collabs and guest spots are gold because someone else opens the door.',
@@ -708,6 +729,18 @@
     sacral: { feel: 'Their energy. The exhaustion and the doing too much. You also feel what lights them up.', soul: 'Burned-out overachievers running on empty.', promo: 'Speak to rest, pacing, or the one thing worth their energy. Show them what lights them up again.', mine: "Their energy isn't yours to run on. Write promos when you have juice and rest when you don't." },
     spleen: { feel: 'Their fears. Fear of being seen, of failing, of letting go of what feels safe.', soul: "People holding on to what isn't working anymore, scared to make the leap.", promo: "Speak to the fear gently, then show them it's safe to take the next step with you.", mine: 'The fear you feel before you post may be theirs, and it passes. Post scared if you need to.' },
     root: { feel: 'Their pressure and urgency. The rush and the never-caught-up feeling.', soul: 'Overwhelmed people racing to get it all done.', promo: 'Slow them down. A calm promo with one clear next step stands out in a busy feed.', mine: 'Nothing in a promo group is as urgent as it feels. Skip the countdown pressure.' }
+  };
+  /* The voice in the buyer's head for each open center. Used in the promo prompt. */
+  var OPEN_VOICE = {
+    head: '"I just need to figure this out first." "What if I pick the wrong thing?"',
+    ajna: '"I need to be sure before I start." "Let me research it a little more."',
+    throat: '"Nobody is listening." "I know what I want to say, so why can\'t I say it?"',
+    g: '"Who am I to do this?" "I don\'t even know who I am anymore."',
+    heart: '"I have to prove I\'m worth it." "Who would pay that much for me?"',
+    sp: '"I don\'t want to upset anyone." "Maybe I\'m too much."',
+    sacral: '"I can\'t stop until it\'s done." "Why am I so tired all the time?"',
+    spleen: '"What if it doesn\'t work?" "It\'s not that bad. I\'ll just stay where I am."',
+    root: '"I have to get it all done now." "I\'m so behind."'
   };
   var LINES = {
     1: { what: "Line 1 needs a solid foundation. You feel safe when you've done your research and really know your stuff.", sell: "You sell through what you know. When you show your expertise, people trust you because they can tell you've done the work.", name: 'The Investigator', promo: 'Back your offer with what you know. A tip, a fact, the why behind your method.', watch: "Waiting until it's perfect to post." },
@@ -741,10 +774,11 @@
     { id: 'start', label: 'Start here' },
     { id: 'design', label: 'My design' },
     { id: 'guide', label: 'Promote by design' },
-    { id: 'business', label: 'My business' },
+    { id: 'business', label: '1. My business' },
+    { id: 'soul', label: '2. My soulmate client' },
+    { id: 'places', label: '3. Places to promote' },
     { id: 'write', label: 'Write my promos' },
     { id: 'week', label: 'My promo week' },
-    { id: 'places', label: 'Places to promote' },
     { id: 'results', label: 'My results' },
     { id: 'library', label: 'My post library' }
   ];
@@ -752,7 +786,11 @@
   function renderNav() {
     var nav = $('nav'); nav.innerHTML = '';
     VIEWS.forEach(function (v) {
-      if (v.id === 'business') nav.appendChild(el('div', { class: 'navdivider', role: 'separator', 'aria-hidden': 'true' }));
+      var secTitle = { start: 'Your Human Design', business: 'Build your profile', write: 'Your weekly promos' }[v.id];
+      if (secTitle) {
+        if (v.id !== 'start') nav.appendChild(el('div', { class: 'navdivider', role: 'separator', 'aria-hidden': 'true' }));
+        nav.appendChild(el('div', { class: 'navsec', text: secTitle }));
+      }
       nav.appendChild(el('button', { type: 'button', class: 'navitem', 'aria-current': state.view === v.id && !(v.id === 'guide' && state.design.done) ? 'page' : 'false', onclick: function () { setView(v.id); } }, [
         el('span', { class: 'gl', 'aria-hidden': 'true', text: '\u2726' }),
         el('span', { text: v.label }),
@@ -793,7 +831,7 @@
   }
   function closeMenu() { document.body.classList.remove('nav-open'); $('menuBtn').setAttribute('aria-expanded', 'false'); }
   var HASHES = { start: 'start', design: 'my-design', guide: 'promote-by-design', 'guide-voice': 'your-voice', 'guide-gates': 'throat-gates', 'guide-profile': 'profile',
-    'guide-clients': 'who-youre-here-for', 'guide-every': 'every-promo', business: 'my-business', write: 'write-my-promos', week: 'my-promo-week',
+    'guide-clients': 'who-youre-here-for', 'guide-every': 'every-promo', business: 'my-business', soul: 'my-soulmate-client', write: 'write-my-promos', week: 'my-promo-week',
     day0: 'monday', day1: 'tuesday', day2: 'wednesday', day3: 'thursday', day4: 'friday', day5: 'saturday', day6: 'sunday', results: 'my-results', library: 'my-post-library', places: 'places-to-promote' };
   function viewFromHash(h) {
     h = (h || '').replace(/^#/, '').toLowerCase();
@@ -816,6 +854,7 @@
     else if (v === 'design') renderDesign();
     else if (v === 'guide' || /^guide-[a-z]+$/.test(v)) renderGuide(v === 'guide' ? 'energy' : v.slice(6));
     else if (v === 'business') renderBusiness();
+    else if (v === 'soul') renderSoul();
     else if (v === 'week') renderWeek();
     else if (v === 'write') renderWrite();
     else if (v === 'results') renderResults();
@@ -893,7 +932,6 @@
     function add(label, v) { v = (v || '').trim(); if (v) out.push(label + '\n' + v + '\n'); }
     out.push('MY BUSINESS INFO\nFrom my She Promotes™ Promo Planner, ' + ymd(new Date()) + '\n');
     add('Your name', b.you); add('Business name', b.name); add('What you do', b.what);
-    add('Who you help', b.who); add("What they're struggling with", b.problem); add('What changes for them after they work with you', b.change); add('Little moments they live', b.moments);
     b.offers.forEach(function (o, i) {
       if (!o.name.trim()) return;
       out.push('OFFER ' + (i + 1) + '\n' + [o.name, o.what, o.format ? 'Type: ' + o.format : '', o.price ? 'Price: ' + o.price : '', o.link ? 'Link: ' + o.link : ''].filter(function (x) { return x && x.trim(); }).join('\n') + '\n');
@@ -903,12 +941,10 @@
       out.push('YOUR COMMUNITY\n' + [c.name, c.what, c.link ? 'Link: ' + c.link : ''].filter(function (x) { return x && x.trim(); }).join('\n') + '\n');
       communityItems().forEach(function (it) { if (it.name.trim()) out.push('Inside: ' + it.name.trim() + (it.what.trim() ? '\nWhat it is: ' + it.what.trim() : '') + (it.helps.trim() ? '\nHow it helps them: ' + it.helps.trim() : '') + '\n'); });
     }
-    add('Why you started', b.story); add('Proof', b.proof);
     if (b.vibe.length) add('How you sound', b.vibe.join(', '));
-    add('Words and phrases you use', b.words); add('Words to avoid', b.avoid); add('Colors and style for your images', b.look);
-    add('Your website', b.website); add('Your About text', b.about); add('Your best posts', b.best);
-    state.library.forEach(function (x, i) { add('Starred post ' + (i + 1), (x.title ? x.title + '\n' : '') + x.text); });
-    add('Posts you admire', b.admire); add('What you like about them', b.admireWhy);
+    add('Colors and style for your images', b.look);
+    add('Your website', b.website); add('Your About text', b.about);
+    add('My Client Mirror Sheet', state.soul.sheet);
     return out.join('\n');
   }
   function exportBusinessText() {
@@ -996,13 +1032,15 @@
 
     box.appendChild(el('section', { class: 'card', 'aria-label': 'How it works' }, [
       el('h3', { text: 'How it works' }),
-      p('Move through the menu in order. You only set up your design once.', 'hint'),
+      p('Set up steps 1 to 3 once. After that, it is just Write my promos and My promo week.', 'hint'),
       el('ol', { class: 'steps' }, [
         el('li', {}, [el('span', { class: 'st', text: 'My design' }), 'Upload your free chart PDF and it fills in for you. Or tap in what your chart says, and every step explains what to look for.']),
         el('li', {}, [el('span', { class: 'st', text: 'Promote by design' }), 'Your personal promo guide, built from your chart. How to start the conversation, when to hit post, and the voice you naturally speak in.']),
-        el('li', {}, [el('span', { class: 'st', text: 'My business' }), "Your offer, who it helps, and how you talk. Prefer to talk instead of type? Tap Speak on any box."]),
-        el('li', {}, [el('span', { class: 'st', text: 'Write my promos' }), 'Plan your week, then copy one prompt into Claude or ChatGPT. It writes your posts in your voice, and you paste them back in here.']),
-        el('li', {}, [el('span', { class: 'st', text: 'My promo week' }), 'A page for each day with your post, its image and buttons that open each of your groups. Share it, then mark the day complete.']),
+        el('li', {}, [el('span', { class: 'st', text: '1. My business' }), 'Set up once. Your name, what you do, your offers and how you sound. Prefer to talk? Tap Speak on any box.']),
+        el('li', {}, [el('span', { class: 'st', text: '2. My soulmate client' }), 'Build your Client Mirror Sheet in Claude from your client calls and your open centers. Every post pulls from it.']),
+        el('li', {}, [el('span', { class: 'st', text: '3. Places to promote' }), 'Pick the groups you post in and the days you can promote in each one.']),
+        el('li', {}, [el('span', { class: 'st', text: 'Write my promos' }), 'Copy your promo prompt into a Claude or ChatGPT Project once. Each week, say "Let\'s write my promos" and it writes them with you.']),
+        el('li', {}, [el('span', { class: 'st', text: 'My promo week' }), 'Paste each post into its day, add versions in tabs, upload the image, and check off each group as you post.']),
         el('li', {}, [el('span', { class: 'st', text: 'My results' }), 'Stats for your offers and community, like total sign ups, page views and orders. Update them each week, watch them grow, and start your new week.'])
       ]),
       p("Your planner saves on this device. Use the same phone or computer each time and everything will be waiting for you.", 'where')
@@ -1662,14 +1700,14 @@
   /* ---------- my business ---------- */
   var FORMATS = ['1:1 Sessions', 'Group Program', 'Course', 'Membership or Skool Community', 'Physical Product', 'Digital Product', 'Live Event or Workshop', 'Affiliate Product'];
   var VIBES = ['Warm', 'Direct', 'Playful', 'Calm', 'Bold', 'Nurturing', 'Funny', 'Grounded', 'Sassy', 'Soft'];
-  function bizReady() { var b = state.business; return !!(b.name.trim() && b.what.trim() && b.who.trim() && b.offers.some(function (o) { return o.name.trim(); })); }
+  function bizReady() { var b = state.business; return !!(b.name.trim() && b.what.trim() && (b.offers.some(function (o) { return o.name.trim(); }) || b.community.name.trim())); }
   function renderBusiness() {
     var box = $('view'); box.innerHTML = '';
     var b = state.business;
     box.appendChild(el('div', {}, [
-      p('Step 3', 'eyebrow'),
+      p('Set up once · 1 of 3', 'eyebrow'),
       el('h1', {}, ['My ', el('em', { text: 'business' })]),
-      p("Tell me about your business the way you'd tell a friend. Claude or ChatGPT uses this to write promos that sound like you. Everything saves as you go.", 'lede'),
+      p("Fill this in once. Your promo prompt pulls from it every week, so Claude or ChatGPT always knows what you offer. Come back any time something changes.", 'lede'),
       speakTip()
     ]));
 
@@ -1678,15 +1716,6 @@
       field({ label: 'Your name', help: 'How you sign your posts.', ph: 'Your first name', get: function () { return b.you; }, set: function (v) { b.you = v; } }),
       field({ label: 'Business name', ph: 'Your business name', get: function () { return b.name; }, set: function (v) { b.name = v; } }),
       field({ label: 'What you do, in one sentence', multi: true, rows: 2, help: 'Keep it simple. What you make or do, and for who.', ex: 'I make small-batch soy candles for people who want their home to feel calm.', get: function () { return b.what; }, set: function (v) { b.what = v; } })
-    ]));
-
-    box.appendChild(el('section', { class: 'card', 'aria-label': 'Who you help' }, [
-      el('h3', { text: 'Who you help' }),
-      p('The clearer you are here, the more your promos make someone stop and think "that\'s me."', 'hint'),
-      field({ label: 'Who you help', multi: true, rows: 2, ex: 'Women in their 40s starting over after a big life change.', get: function () { return b.who; }, set: function (v) { b.who = v; } }),
-      field({ label: "What they're struggling with before they find you", multi: true, help: 'Use the words they would use, not industry words.', ex: "They know they're meant for more, but they have no idea what 'more' even is.", get: function () { return b.problem; }, set: function (v) { b.problem = v; } }),
-      field({ label: 'What changes for them after they work with you?', multi: true, help: 'If you sell a product, think about what changes after they buy from you.', ex: 'They have a clear next step and feel excited about their life again.', get: function () { return b.change; }, set: function (v) { b.change = v; } }),
-      field({ label: 'Little moments they live', multi: true, rows: 4, help: "The small, real scenes from their day that only someone who gets them would know. These make your posts feel like you're reading their mind.", ex: "They rewrote their bio three times this week. They have 14 tabs open. They say 'I'll post tomorrow' every day.", get: function () { return b.moments; }, set: function (v) { b.moments = v; } })
     ]));
 
     var offersWrap = el('div', {});
@@ -1718,62 +1747,41 @@
     drawOffers();
     box.appendChild(el('section', { class: 'card', 'aria-label': 'Your offers' }, [
       el('h3', { text: 'Your offers' }),
-      p("Add up to three. Each promo shares one offer, and your week rotates through them.", 'hint'),
+      p("Add up to three. Each week you tell Claude which ones you want to promote.", 'hint'),
       offersWrap
     ]));
 
     var c = b.community;
     box.appendChild(el('section', { class: 'card', 'aria-label': 'Your community' }, [
       el('h3', { text: 'Your community (optional)' }),
-      p("If you run a Skool group or another community, add it here. You can focus your whole week on it, and share an offer as your Thursday second post.", 'hint'),
+      p("If you run a Skool group or another community, add it here, plus the things inside it people join for.", 'hint'),
       field({ label: 'Community name', get: function () { return c.name; }, set: function (v) { c.name = v; } }),
       field({ label: 'What happens inside', multi: true, rows: 2, ex: 'Weekly candle-making lives and a place to share what you made.', get: function () { return c.what; }, set: function (v) { c.what = v; } }),
       field({ label: 'Link', type: 'url', inputmode: 'url', ph: 'https://', get: function () { return c.link; }, set: function (v) { c.link = v; } }),
       communityItemsEditor()
     ]));
 
-    box.appendChild(el('section', { class: 'card', 'aria-label': 'Your story and voice' }, [
-      el('h3', { text: 'Your story and voice' }),
-      field({ label: 'Why you started', multi: true, help: 'A few sentences. This is what makes people trust you.', ex: "I left a 15 year corporate job and felt completely lost. Figuring out my own 'what's next' is how this all started.", get: function () { return b.story; }, set: function (v) { b.story = v; } }),
-      field({ label: 'Proof (optional)', multi: true, help: 'A client win or kind words you have permission to share.', get: function () { return b.proof; }, set: function (v) { b.proof = v; } }),
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'How you sound' }, [
+      el('h3', { text: 'How you sound' }),
       el('div', { class: 'field' }, [
-        el('label', { text: 'How you sound' }),
         p('Tap every one that fits.', 'help'),
         chipRow(VIBES.map(function (v) { return { id: v, label: v }; }), function (id) { return b.vibe.indexOf(id) > -1; }, function (id) { toggleIn(b.vibe, id); save(); renderBusiness(); }, 'How you sound')
       ]),
-      field({ label: 'Words and phrases you use', multi: true, rows: 2, help: 'Things you actually say. Paste a caption you love if that is easier.', ex: "'Okay, real talk.' 'You've got this.'", get: function () { return b.words; }, set: function (v) { b.words = v; } }),
-      field({ label: 'Words to avoid', multi: true, rows: 2, ex: 'Hustle, boss babe, manifest.', get: function () { return b.avoid; }, set: function (v) { b.avoid = v; } }),
-      field({ label: 'Colors and style for your images (optional)', multi: true, rows: 2, help: 'This goes into your image prompts so your posts look like you.', ex: 'Soft sage green and cream. Cozy, natural, lots of morning light.', get: function () { return b.look; }, set: function (v) { b.look = v; } })
+      field({ label: 'Colors and style for your images (optional)', multi: true, rows: 2, help: 'This goes into your image prompts so your banners look like you.', ex: 'Soft sage green and cream. Cozy, natural, lots of morning light.', get: function () { return b.look; }, set: function (v) { b.look = v; } })
     ]));
 
-    var libWrap = el('div', {});
-    function drawLib() {
-      libWrap.innerHTML = '';
-      if (!state.library.length) { libWrap.appendChild(p('When a post does well, tap \u2606 This one did well on its day page. It shows up here and Claude learns from it.', 'hint')); return; }
-      state.library.forEach(function (x, i) {
-        libWrap.appendChild(el('div', { class: 'trow' }, [
-          el('span', { class: 'libtxt' }, [el('span', { class: 'tn', text: x.title || x.text.slice(0, 60) + (x.text.length > 60 ? '...' : '') }), el('span', { class: 'tk', text: x.week ? 'Week of ' + x.week : 'Saved' })]),
-          twoStep('Remove', 'Tap again', function () { state.library.splice(i, 1); save(); drawLib(); })
-        ]));
-      });
-    }
-    drawLib();
     box.appendChild(el('section', { class: 'card', 'aria-label': 'Help Claude learn your voice' }, [
       el('h3', { text: 'Help Claude learn your voice' }),
-      p('The more Claude or ChatGPT knows about how you talk, the more your posts sound like you. Everything here is optional, and every bit helps.', 'hint'),
+      p('Both optional. Claude reads them to pick up how you talk about your work.', 'hint'),
       field({ label: 'Your website or landing page', type: 'url', inputmode: 'url', ph: 'https://', help: 'Claude reads it before writing, when it can open the page.', get: function () { return b.website; }, set: function (v) { b.website = v.trim(); } }),
-      field({ label: 'Your About text', multi: true, rows: 4, help: "Paste your About section or bio. Claude can't open Instagram or Facebook pages, so pasting works best.", get: function () { return b.about; }, set: function (v) { b.about = v; } }),
-      field({ label: 'Your best posts', multi: true, rows: 8, cls: 'post', help: 'Paste 2 or 3 posts that did well. Put a blank line between them. This teaches your voice better than anything else.', get: function () { return b.best; }, set: function (v) { b.best = v; } }),
-      el('div', { class: 'field' }, [el('label', { text: 'Posts you starred' }), libWrap]),
-      field({ label: 'Posts you admire', multi: true, rows: 6, help: "Paste a couple of posts from accounts doing really well. Claude learns their hook style and structure, and never copies their words.", get: function () { return b.admire; }, set: function (v) { b.admire = v; } }),
-      field({ label: 'What you like about them', multi: true, rows: 2, ex: 'The first line always asks a question. Short paragraphs. They tell a quick story before the offer.', get: function () { return b.admireWhy; }, set: function (v) { b.admireWhy = v; } })
+      field({ label: 'Your About text', multi: true, rows: 4, help: "Paste your About section or bio. Claude can't open Instagram or Facebook pages, so pasting works best.", get: function () { return b.about; }, set: function (v) { b.about = v; } })
     ]));
 
     box.appendChild(el('div', { class: 'actions' }, [
-      el('button', { type: 'button', class: 'btn main', text: 'Next: write my promos', onclick: function () {
+      el('button', { type: 'button', class: 'btn main', text: 'Next: 2. My soulmate client', onclick: function () {
         save();
-        if (!bizReady()) { toast('Add your business name, what you do, who you help and one offer.'); return; }
-        setView('write');
+        if (!bizReady()) { toast('Add your business name, what you do, and one offer or your community.'); return; }
+        setView('soul');
       } })
     ]));
     box.appendChild(p('Everything saves on this device as you type.', 'saved-note'));
@@ -1788,17 +1796,161 @@
     ]));
   }
 
+  /* ---------- my soulmate client ---------- */
+  function openCenterList() {
+    return CENTERS.filter(function (c) { return state.design.open.indexOf(c.id) > -1; });
+  }
+  function mirrorPrompt() {
+    var so = state.soul, d = state.design;
+    var T = TYPES.filter(function (t) { return t.id === d.type; })[0];
+    var A = AUTH.filter(function (a) { return a.id === d.authority; })[0];
+    var open = openCenterList();
+    var hd = [];
+    if (T) hd.push('Type: ' + T.label + (A ? '. Authority: ' + A.label : '') + (d.profile ? '. Profile: ' + d.profile : '') + '.');
+    if (open.length) {
+      hd.push('My open centers:');
+      open.forEach(function (c) { var O = OPEN_DATA[c.id]; hd.push('- ' + c.label + (O && O.feel ? ': ' + O.feel : '')); });
+      hd.push('In Human Design, my open centers are where I take in and feel other people\'s energy. They are often where I have lived what my soulmate client is living, so they show where I mirror them.');
+    } else hd.push("I haven't added my open centers yet. Ask me which centers are white on my chart before you write the WHERE I MIRROR THEM section.");
+    function ans(v) { return (v || '').trim() || '(not answered)'; }
+    return [
+      "I want you to build a Client Mirror Sheet for my business. It's a reference sheet about my soulmate client that I'll use every time I write a promo post, so it needs their real moments and their exact words. It also uses my Human Design to show where I mirror them.",
+      '',
+      'ABOUT ME',
+      '1. What I help people with:',
+      ans(so.help),
+      '2. Who I feel most called to work with, and why:',
+      ans(so.called),
+      '3. My story:',
+      ans(so.story),
+      "4. What I'm uploading:",
+      ans(so.sources),
+      '',
+      'MY HUMAN DESIGN',
+      hd.join('\n'),
+      '',
+      'HOW TO BUILD IT',
+      "Read everything I've uploaded first. Look for patterns across my clients, and pull out micro specific details: times of day, places, things they did, things they said. Use their exact words wherever you can.",
+      "If I didn't upload anything, don't guess. Ask me 5 questions about my clients first, one at a time, and build the sheet from my answers.",
+      '',
+      'Organize it into these sections:',
+      'WHO THEY ARE: a short snapshot of their life right now.',
+      "THE MIDDLE OF THE NIGHT: what they're scrolling, searching, and lying awake thinking about.",
+      "THE VOICE IN THEIR HEAD: the exact things they say to themselves when it's hard. When it fits, note which open center that voice is coming from.",
+      "WHAT THEY'VE ALREADY TRIED: and why it didn't stick.",
+      'WHAT STAYING STUCK IS COSTING THEM: money, time, energy, relationships, confidence.',
+      "WHAT THEY REALLY WANT: the big desire, plus the first small win they'd notice.",
+      'WHAT MAKES THEM HESITATE: the worries that stop them from buying.',
+      'THEIR EXACT WORDS: a bank of 10 to 15 real phrases from what I shared.',
+      "WHERE I MIRROR THEM: how their struggles connect to my open centers and my story. Where I've felt what they feel, and what I know because of it.",
+      'READY TO USE HOOKS: 5 opening lines for promos, each one built from a real moment above.',
+      '',
+      'RULES',
+      "- Protect my clients' privacy. Leave out names, places, and anything that could identify a real person.",
+      "- Only use what I gave you. Don't invent details, results, or quotes.",
+      '- Keep it simple and easy to scan. Short lines. CAPITAL LETTER headings. No em dashes, no markdown symbols.',
+      '- Use "they" for my client unless I say otherwise.',
+      '- When you\'re done, ask me: "Want to go deeper, or is this good?"'
+    ].join('\n');
+  }
+  function renderSoul() {
+    var box = $('view'); box.innerHTML = '';
+    var so = state.soul;
+    box.appendChild(el('div', {}, [
+      p('Set up once · 2 of 3', 'eyebrow'),
+      el('h1', {}, ['My soulmate ', el('em', { text: 'client' })]),
+      p("Your Client Mirror Sheet shows who your soulmate client is, what they're living, and where you mirror them through your Human Design. Claude builds it from your answers and your client calls. Then every promo you write pulls from it.", 'lede'),
+      speakTip()
+    ]));
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Why your open centers matter' }, [
+      el('h3', { text: 'Why your open centers matter' }),
+      p("Your buyer has a voice in their head, and it's loudest in their open centers. Your open centers are where you've felt that same voice. That's why your soulmate client so often lives right there."),
+      p("When your promo says what that voice says, in their words, they read it and think \"that's me.\"", 'quote')
+    ]));
+
+    var open = openCenterList();
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 1: Answer a few questions' }, [
+      el('h3', { text: 'Step 1: Answer a few questions' }),
+      field({ label: 'What do you help people with, in your own words?', multi: true, rows: 2, ex: 'I help solo coaches get their admin off their plate so they can focus on clients.', get: function () { return so.help; }, set: function (v) { so.help = v; } }),
+      field({ label: 'Who do you feel most called to work with, and why them?', multi: true, rows: 2, help: 'The people you light up working with.', ex: 'Solo coaches who are great at their work but drowning in the admin side.', get: function () { return so.called; }, set: function (v) { so.called = v; } }),
+      field({ label: 'Your story. Where were you before you found what you do now?', multi: true, rows: 3, help: "Especially if you've lived what your buyer is living.", ex: 'I ran my own business and spent every night catching up on emails I meant to answer at noon.', get: function () { return so.story; }, set: function (v) { so.story = v; } }),
+      field({ label: 'What will you upload?', multi: true, rows: 2, help: "Call transcripts from your last 3 to 5 clients work best. No recordings? DMs, reviews in your niche, voice notes or your own story work too. Only share what you're comfortable sharing.", ex: 'Zoom transcripts from 4 discovery calls and a few DMs.', get: function () { return so.sources; }, set: function (v) { so.sources = v; } }),
+      el('div', { class: 'field' }, [
+        el('label', { text: 'Your open centers' }),
+        open.length
+          ? el('div', { class: 'chips' }, open.map(function (c) { return el('span', { class: 'chip', 'aria-pressed': 'true', text: c.label }); }))
+          : el('div', {}, [p('Add your chart in My design and your open centers fill in here.', 'help'), el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn small', text: 'Go to my design', onclick: function () { setView('design'); } })])]),
+        open.length ? p('These come from your chart, and they go into your prompt automatically.', 'help') : null
+      ])
+    ]));
+
+    var promptBox = el('textarea', { class: 'textarea', rows: 8, readonly: true, 'aria-label': 'Your Client Mirror Sheet prompt' });
+    promptBox.value = mirrorPrompt();
+    box.addEventListener('input', function () { promptBox.value = mirrorPrompt(); });
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 2: Build it in Claude' }, [
+      el('h3', { text: 'Step 2: Build it in Claude' }),
+      el('ol', { class: 'steps' }, [
+        el('li', {}, [el('span', { class: 'st', text: 'Copy your prompt' }), 'Your answers and your open centers are already in it.']),
+        el('li', {}, [el('span', { class: 'st', text: 'Open Claude' }), 'Start a new chat, paste your prompt, and upload your transcripts or notes. Claude handles long transcripts best, so use Claude for this one.']),
+        el('li', {}, [el('span', { class: 'st', text: 'Make it yours' }), "Read it through. If something doesn't sound like your clients, tell Claude and it fixes it."])
+      ]),
+      el('div', { class: 'actions' }, [
+        el('button', { type: 'button', class: 'btn main', text: 'Copy my prompt', onclick: function () {
+          if (!(so.help.trim() || so.called.trim())) { toast('Answer a question or two first.'); return; }
+          promptBox.value = mirrorPrompt(); copyText(promptBox.value, 'Copied. Paste it into Claude and upload your transcripts.');
+        } }),
+        el('a', { class: 'btn', href: CLAUDE_URL, target: '_blank', rel: 'noopener noreferrer', text: 'Open Claude' })
+      ]),
+      el('details', { class: 'day' }, [
+        el('summary', {}, [el('span', { class: 'chev', 'aria-hidden': 'true', text: '›' }), el('span', { class: 'ddate', text: 'Peek at your prompt' })]),
+        el('div', { class: 'day-body' }, [promptBox])
+      ]),
+      p("The prompt tells Claude to leave out your clients' names and anything that could identify them.", 'hint')
+    ]));
+
+    var sheet = el('textarea', { class: 'textarea post', placeholder: 'Paste your finished Client Mirror Sheet here.', 'aria-label': 'Your Client Mirror Sheet' });
+    sheet.value = so.sheet;
+    var meta = el('span', { class: 'hint' });
+    function upd() { var n = so.sheet.trim() ? so.sheet.trim().split(/\s+/).length : 0; meta.textContent = n ? n + ' words saved' : ''; }
+    sheet.addEventListener('input', function () { so.sheet = sheet.value; saveSoon(); upd(); });
+    upd();
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 3: Save your sheet' }, [
+      el('h3', { text: 'Step 3: Save your sheet' }),
+      p('Paste it here so your promo prompt includes it. Then add it to your Claude or ChatGPT Project files too, so it is there every time you write.', 'hint'),
+      sheet, meta,
+      el('div', { class: 'field', style: 'margin-top:12px' }, [
+        chipRow([{ id: 'on', label: 'Add it to my promo prompt' }], function () { return so.include !== false; }, function () { so.include = so.include === false; save(); renderSoul(); }, 'Add it to my promo prompt')
+      ]),
+      el('div', { class: 'actions' }, [
+        el('button', { type: 'button', class: 'btn small', text: 'Download my sheet', onclick: function () {
+          if (!so.sheet.trim()) { toast('Paste your sheet first.'); return; }
+          try {
+            var blob = new Blob([so.sheet], { type: 'text/plain;charset=utf-8' }), url = URL.createObjectURL(blob);
+            var a = el('a', { href: url, download: 'client-mirror-sheet.txt', style: 'display:none' });
+            document.body.appendChild(a); a.click();
+            setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1500);
+            toast('Your sheet is downloaded. Upload it to your Project files.');
+          } catch (e) { toast("The file couldn't be saved on this browser."); }
+        } })
+      ])
+    ]));
+    box.appendChild(el('div', { class: 'actions' }, [
+      el('button', { type: 'button', class: 'btn main', text: 'Next: 3. Places to promote', onclick: function () { save(); setView('places'); } })
+    ]));
+    box.appendChild(p('This step is optional, and it makes every post better. Everything saves as you type.', 'saved-note'));
+  }
+
   /* ---------- my promo week ---------- */
   var DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   var DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   var DAY_NOTES = [
-    ['Free promo day.', 'The feed is busiest today. Comment on a few other promos while you are there.'],
-    ['What Do You Need? thread.', 'Read what people are looking for. If your offer is a real fit, reply once with it.'],
-    ['Free promo day.', 'Busy feed again. Show up for a few other women before or after you post.'],
-    ['Premium double post day.', 'Share your community and an offer, or two different offers.'],
+    ['New week.', 'Post early, then comment on a few other promos while you are there.'],
+    ['Show up for others.', 'Comment on three promos before you share yours.'],
+    ['Midweek.', 'Reply to every comment from earlier in the week. That is where the conversations start.'],
+    ['Keep going.', 'Share a different version today, so the people who saw Monday see something new.'],
     ['Collab Corner thread.', 'Looking for a guest spot, a workshop swap or a co-host? Comment in the thread.'],
-    ['Member Spotlight day.', 'Cheer on whoever is featured. Your comment counts.'],
-    ['Quiet day.', 'A good day to reply to comments from the week and plan the next one.']
+    ['Weekend.', 'The feed is lighter. A good day for a softer, more personal post.'],
+    ['Quiet day.', 'Reply to comments from the week and get ready for Monday.']
   ];
   var WEEK_BY_TYPE = {
     gen: 'Plan the week, then check in each morning. If the planned offer is not a yes today, swap it for one that is.',
@@ -1820,22 +1972,47 @@
     for (var i = 0; i < 7; i++) {
       var list = [];
       if (w.rest.indexOf(i) === -1) {
-        list.push({ key: i + '-sp-0', where: i === 3 ? 'Your first post' : 'Your post', note: '' });
-        if (i === 3) list.push({ key: '3-sp-1', where: 'Your second post', note: '', second: true });
+        list.push({ key: i + '-sp-0' });
       }
       out.push(list);
     }
     return out;
   }
-  function slotData(key) {
-    var s = state.week.slots[key];
-    if (!s) { s = { offer: '', title: '', text: '', ig: '', fb: '', tt: '', imgPrompt: '', img: '', posted: false }; state.week.slots[key] = s; }
-    ['ig', 'fb', 'tt', 'opening', 'body'].forEach(function (k) { if (typeof s[k] !== 'string') s[k] = ''; });
-    if (typeof s.title !== 'string') s.title = '';
-    if (!s.gv || typeof s.gv !== 'object') s.gv = {};
-    if (!Array.isArray(s.shared)) s.shared = [];
+  function newVersion(n) { return { id: 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: 'Version ' + n, title: '', text: '' }; }
+  /* One post per day. Each post has version tabs, one image, and where it was posted. */
+  function cleanSlot(x) {
+    function str(v) { return typeof v === 'string' ? v : ''; }
+    x = x || {};
+    var s = { versions: [], active: 0, img: str(x.img), posted: {} };
+    if (Array.isArray(x.versions)) {
+      x.versions.forEach(function (v, n) {
+        if (v && typeof v === 'object') s.versions.push({ id: str(v.id) || newVersion(n + 1).id, name: str(v.name) || 'Version ' + (n + 1), title: str(v.title), text: str(v.text) });
+      });
+    } else {
+      var text = str(x.text), title = str(x.title);
+      if (text.trim() || title.trim()) s.versions.push({ id: 'v1', name: 'Version 1', title: title, text: text });
+      var op = str(x.opening).trim();
+      var body = op && text.indexOf(op) === 0 ? text.slice(op.length).replace(/^\s+/, '') : (str(x.body).trim() || text);
+      if (x.gv && typeof x.gv === 'object') Object.keys(x.gv).forEach(function (gk) {
+        var g = x.gv[gk];
+        if (g && str(g.opening).trim()) { var nv = newVersion(s.versions.length + 1); nv.id += gk.slice(0, 4); nv.title = str(g.title); nv.text = str(g.opening).trim() + '\n\n' + body; s.versions.push(nv); }
+      });
+      [['ig', 'Instagram'], ['fb', 'Facebook'], ['tt', 'TikTok']].forEach(function (pp) {
+        if (str(x[pp[0]]).trim()) { var nv = newVersion(s.versions.length + 1); nv.id += pp[0]; nv.name = pp[1]; nv.text = x[pp[0]]; s.versions.push(nv); }
+      });
+    }
+    if (!s.versions.length) s.versions.push(newVersion(1));
+    if (x.posted && typeof x.posted === 'object' && !Array.isArray(x.posted)) Object.keys(x.posted).forEach(function (k) { if (typeof x.posted[k] === 'string') s.posted[k] = x.posted[k]; });
+    else if (Array.isArray(x.shared)) x.shared.forEach(function (g) { if (typeof g === 'string') s.posted[g] = s.versions[0].id; });
+    s.active = typeof x.active === 'number' && x.active >= 0 && x.active < s.versions.length ? x.active : 0;
     return s;
   }
+  function slotData(key) {
+    var s = state.week.slots[key];
+    if (!s || !Array.isArray(s.versions)) { s = cleanSlot(s); state.week.slots[key] = s; }
+    return s;
+  }
+  function slotHasPost(s) { return !!(s && Array.isArray(s.versions) && s.versions.some(function (v) { return (v.text || '').trim(); })); }
   function offerChoices() {
     var b = state.business, out = [];
     b.offers.forEach(function (o, i) { if (o.name.trim()) out.push({ id: 'o' + i, label: o.name.trim() }); });
@@ -1903,9 +2080,9 @@
     var doneCount = planned.filter(function (i) { return w.done.indexOf(i) > -1; }).length;
 
     box.appendChild(el('div', {}, [
-      p('Step 5', 'eyebrow'),
+      p('Every week', 'eyebrow'),
       el('h1', {}, ['My promo ', el('em', { text: 'week' })]),
-      p('Open each day, share your post in every group, and mark the day complete. Your days are in the menu too.', 'lede')
+      p('Open each day, paste in your post and image, and check off each group as you post. Your days are in the menu too.', 'lede')
     ]));
 
     var T = TYPES.filter(function (t) { return t.id === d.type; })[0];
@@ -1923,7 +2100,6 @@
       el('div', { class: 'progress', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(planned.length), 'aria-valuenow': String(doneCount) }, [el('span', { style: 'width:' + (planned.length ? Math.round(doneCount / planned.length * 100) : 0) + '%' })]),
       stars([
         'Week of ' + fmtDate(weekDate(0)),
-        'Focus: ' + (fc ? fc.label : 'Rotate my offers'),
         'Sharing in: She Promotes™' + (w.groups.length ? ' and ' + w.groups.length + ' other group' + (w.groups.length === 1 ? '' : 's') : '')
       ]),
       el('div', { class: 'actions' }, [
@@ -1934,8 +2110,8 @@
     var grid = el('div', { class: 'daygrid' });
     days.forEach(function (list, i) {
       var off = !dayHasPosts(i), done = w.done.indexOf(i) > -1;
-      var filled = list.filter(function (sl) { var s = w.slots[sl.key]; return s && s.text && s.text.trim(); }).length;
-      var status = off ? 'Day off' : (done ? 'Complete' : (filled < list.length ? (filled ? filled + ' of ' + list.length + ' written' : 'Not written yet') : 'Ready to share'));
+      var filled = list.filter(function (sl) { return slotHasPost(w.slots[sl.key]); }).length;
+      var status = off ? 'Day off' : (done ? 'Complete' : (filled ? 'Ready to share' : 'No post yet'));
       grid.appendChild(el('button', { type: 'button', class: 'daycard' + (done ? ' done' : '') + (off ? ' off' : '') + (isTodayIdx(i) ? ' today' : ''), onclick: function () { setView('day' + i); } }, [
         el('span', { class: 'dc-name', text: DAYS[i] }),
         el('span', { class: 'dc-date', text: fmtDate(weekDate(i)) + (isTodayIdx(i) ? ', today' : '') }),
@@ -1955,7 +2131,6 @@
     var box = $('view'); box.innerHTML = '';
     var w = state.week;
     var list = buildSlots()[i];
-    var idxBase = 0; buildSlots().slice(0, i).forEach(function (l) { idxBase += l.length; });
     var done = w.done.indexOf(i) > -1;
 
     box.appendChild(el('div', {}, [
@@ -1970,7 +2145,7 @@
         p('Enjoy your day off. You can add it back in Write my promos.', 'hint')
       ]));
     } else {
-      list.forEach(function (sl, n) { box.appendChild(slotCard(sl, idxBase + n, i)); });
+      list.forEach(function (sl) { box.appendChild(slotCard(sl, i)); });
       var doneBtn = el('button', { type: 'button', class: done ? 'btn' : 'btn main', text: done ? '✓ ' + DAYS[i] + ' is complete. Undo' : 'Mark ' + DAYS[i] + ' complete', onclick: function () {
         toggleIn(w.done, i); save();
         if (w.done.indexOf(i) > -1) {
@@ -1981,7 +2156,7 @@
         } else { renderNav(); renderDay(i); }
       } });
       box.appendChild(el('div', { class: 'complete-bar' + (done ? ' done' : '') }, [
-        p(done ? 'Beautiful. This day is done.' : 'Shared everywhere? Mark this day complete.', 'hint'),
+        p(done ? 'Beautiful. This day is done.' : 'Posted everywhere? Mark this day complete.', 'hint'),
         doneBtn
       ]));
     }
@@ -1994,155 +2169,90 @@
     ]));
   }
 
-  var PLATFORMS = [
-    { id: 'instagram', label: 'Instagram', key: 'ig', limit: 2000 },
-    { id: 'facebook', label: 'Facebook', key: 'fb', limit: 2000 },
-    { id: 'tiktok', label: 'TikTok', key: 'tt', limit: 0 }
-  ];
-  function activePlatforms() { return PLATFORMS.filter(function (pf) { return state.week.platforms.indexOf(pf.id) > -1; }); }
-  var slotTab = {};
   function isStarred(text) { var t = (text || '').trim(); return !!t && state.library.some(function (x) { return x.text.trim() === t; }); }
-  function toggleStar(s) {
-    var t = (s.text || '').trim(); if (!t) { toast('Write or paste the post first.'); return false; }
-    var i = -1; state.library.forEach(function (x, n) { if (x.text.trim() === t) i = n; });
-    if (i > -1) { state.library.splice(i, 1); save(); toast('Removed from your best posts.'); return false; }
-    state.library.unshift({ title: (s.title || '').trim(), text: t, week: fmtDate(weekDate(0)) });
-    state.library = state.library.slice(0, 10);
-    save(); toast('Saved to your best posts. Claude learns from it next week.');
-    return true;
+  function versionName(s, id) {
+    var v = s.versions.filter(function (x) { return x.id === id; })[0];
+    return v ? (v.name || 'Version') : 'an old version';
   }
-
-  function slotCard(sl, idx, day) {
+  function slotCard(sl, day) {
     var s = slotData(sl.key);
-    var choices = offerChoices();
-    if (s.offer && !choices.some(function (c) { return c.id === s.offer; })) s.offer = '';
-    var cur = s.offer || defaultOffer(sl, idx);
-    var sel = el('select', { class: 'select', 'aria-label': 'What this post promotes' }, choices.map(function (c) {
-      var o = el('option', { value: c.id, text: c.label }); if (c.id === cur) o.selected = true; return o;
-    }));
-    sel.addEventListener('change', function () { s.offer = sel.value; save(); });
+    var card = el('section', { class: 'card slot', 'aria-label': 'Your post for ' + DAYS[day] });
+    function draw() {
+      card.innerHTML = '';
+      if (s.active >= s.versions.length) s.active = 0;
+      var v = s.versions[s.active];
 
-    var ttl = el('input', { class: 'input', type: 'text', placeholder: 'A hook title that makes them stop scrolling', 'aria-label': 'Post title' });
-    ttl.value = s.title || '';
-    function ttlChanged() { s.title = ttl.value; saveSoon(); }
-    ttl.addEventListener('input', ttlChanged);
-    var txt = el('textarea', { class: 'textarea post', placeholder: 'Your post goes here. Write it yourself, or paste in what Claude or ChatGPT writes for you.', 'aria-label': 'Post text' });
-    txt.value = s.text;
-    function txtChanged() { s.text = txt.value; saveSoon(); }
-    txt.addEventListener('input', txtChanged);
+      var tabs = el('div', { class: 'vtabs', role: 'tablist', 'aria-label': 'Versions of this post' });
+      s.versions.forEach(function (x, n) {
+        var on = n === s.active;
+        tabs.appendChild(el('button', { type: 'button', role: 'tab', class: 'vtab' + (on ? ' on' : ''), 'aria-selected': String(on), text: x.name || 'Version ' + (n + 1), onclick: function () { s.active = n; save(); draw(); } }));
+      });
+      tabs.appendChild(el('button', { type: 'button', class: 'vtab add', text: '+ Add version', onclick: function () {
+        s.versions.push(newVersion(s.versions.length + 1)); s.active = s.versions.length - 1; save(); draw();
+        var t = card.querySelector('input[aria-label="Post title"]'); if (t) t.focus();
+      } }));
+      card.appendChild(tabs);
 
-    var ip = el('textarea', { class: 'textarea', rows: 3, placeholder: 'The prompt for your image. Claude or ChatGPT adds one for each post.', 'aria-label': 'Image prompt' });
-    ip.value = s.imgPrompt;
-    function ipChanged() { s.imgPrompt = ip.value; saveSoon(); }
-    ip.addEventListener('input', ipChanged);
+      var ttl = el('input', { class: 'input', type: 'text', placeholder: 'Paste your title here', 'aria-label': 'Post title' });
+      ttl.value = v.title || '';
+      function ttlChanged() { v.title = ttl.value; saveSoon(); }
+      ttl.addEventListener('input', ttlChanged);
+      var txt = el('textarea', { class: 'textarea post', placeholder: 'Paste your post here.', 'aria-label': 'Post text' });
+      txt.value = v.text || '';
+      function txtChanged() { v.text = txt.value; saveSoon(); }
+      txt.addEventListener('input', txtChanged);
 
-    var imgBox = el('div', { class: 'imgbox' });
-    function drawImg() {
-      imgBox.innerHTML = '';
+      card.appendChild(labelRow(el('div', { class: 'mini', text: 'Title' }), ttl, ttlChanged));
+      card.appendChild(ttl);
+      card.appendChild(el('div', { class: 'actions' }, [
+        el('button', { type: 'button', class: 'btn small', text: 'Copy title', onclick: function () { if (!(v.title || '').trim()) { toast('Add your title first.'); return; } copyText(v.title, 'Title copied.'); } })
+      ]));
+      card.appendChild(labelRow(el('div', { class: 'mini', text: 'Post' }), txt, txtChanged));
+      card.appendChild(txt);
+      card.appendChild(el('div', { class: 'actions' }, [
+        el('button', { type: 'button', class: 'btn small', text: 'Copy post', onclick: function () { if (!(v.text || '').trim()) { toast('Paste your post first.'); return; } copyText(v.text, 'Post copied.'); } })
+      ]));
+
+      var nm = el('input', { class: 'input', type: 'text', placeholder: 'Version 2, Instagram, For Promote Today...', 'aria-label': 'Name this version' });
+      nm.value = v.name || '';
+      nm.addEventListener('input', function () { v.name = nm.value; saveSoon(); });
+      nm.addEventListener('change', function () { if (!v.name.trim()) v.name = 'Version ' + (s.active + 1); save(); draw(); });
+      card.appendChild(el('details', { class: 'vmore' }, [
+        el('summary', { text: 'Rename or remove this version' }),
+        nm,
+        s.versions.length > 1 ? el('div', { class: 'actions' }, [twoStep('Remove this version', 'Tap again to remove', function () {
+          var gone = s.versions.splice(s.active, 1)[0];
+          Object.keys(s.posted).forEach(function (g) { if (s.posted[g] === gone.id) delete s.posted[g]; });
+          s.active = Math.max(0, s.active - 1); save(); draw();
+        })]) : null
+      ]));
+
+      var imgBox = el('div', { class: 'imgbox' });
       if (s.img) {
         imgBox.appendChild(el('img', { src: s.img, alt: 'Image for this post' }));
         imgBox.appendChild(el('div', { class: 'actions' }, [
-          el('a', { class: 'btn small', href: s.img, download: 'promo-' + sl.key + '.jpg', text: 'Save image' }),
-          el('button', { type: 'button', class: 'btn small warn', text: 'Remove image', onclick: function () { s.img = ''; save(); drawImg(); } })
+          el('a', { class: 'btn small', href: s.img, download: 'promo-' + DAYS[day].toLowerCase() + '.jpg', text: 'Download image' }),
+          el('button', { type: 'button', class: 'btn small warn', text: 'Remove image', onclick: function () { s.img = ''; save(); draw(); } })
         ]));
         imgBox.appendChild(p('On your phone, press and hold the image to save it to your photos.', 'hint'));
       } else {
         var file = el('input', { type: 'file', accept: 'image/*', 'aria-label': 'Add an image' });
         file.addEventListener('change', function () {
-          var f = file.files && file.files[0];
-          compressImage(f, function (url) {
+          compressImage(file.files && file.files[0], function (url) {
             var prev = s.img; s.img = url;
             if (!save()) { s.img = prev; toast('Your planner is full. Remove a few images and try again.'); return; }
-            drawImg(); toast('Image added.');
+            draw(); toast('Image added.');
           });
         });
         imgBox.appendChild(el('span', { class: 'btn small filebtn' }, ['+ Add image', file]));
       }
+      card.appendChild(el('div', { class: 'mini', text: 'Image' }));
+      card.appendChild(imgBox);
+
+      card.appendChild(el('div', { class: 'mini', text: 'Post it in' }));
+      card.appendChild(shareLinks(s, day, draw));
     }
-    drawImg();
-
-    var starBtn = el('button', { type: 'button', class: 'btn small star' + (isStarred(s.text) ? ' on' : ''), text: isStarred(s.text) ? '★ Saved as a best post' : '☆ This one did well' });
-    starBtn.addEventListener('click', function () {
-      var on = toggleStar(s);
-      starBtn.classList.toggle('on', on);
-      starBtn.textContent = on ? '★ Saved as a best post' : '☆ This one did well';
-    });
-
-    /* skool panel */
-    var skool = el('div', { class: 'tabpanel' }, [
-      labelRow(el('div', { class: 'mini', text: 'Your title' }), ttl, ttlChanged), ttl,
-      el('div', { class: 'actions' }, [
-        el('button', { type: 'button', class: 'btn small', text: 'Copy title', onclick: function () { if (!s.title.trim()) { toast('Add your title first.'); return; } copyText(s.title, 'Title copied.'); } })
-      ]),
-      labelRow(el('div', { class: 'mini', text: 'Your post' }), txt, txtChanged), txt,
-      el('div', { class: 'actions' }, [
-        el('button', { type: 'button', class: 'btn small', text: 'Copy post', onclick: function () { if (!s.text.trim()) { toast('Write your post first.'); return; } copyText(s.text, 'Post copied.'); } }),
-        starBtn
-      ]),
-      el('div', { class: 'mini', text: 'Share it in' }),
-      shareLinks(sl, day)
-    ]);
-
-    var panels = [{ id: 'skool', label: 'Skool & groups', node: skool }];
-    if (!sl.second) activePlatforms().forEach(function (pf) {
-      var ta = el('textarea', { class: 'textarea post', 'aria-label': pf.label + ' version', placeholder: pf.id === 'tiktok' ? 'Your TikTok script. Claude or ChatGPT writes it for you, with a hook, the script, on-screen text and a caption.' : 'Your ' + pf.label + ' caption. Claude or ChatGPT writes it for you.' });
-      ta.value = s[pf.key] || '';
-      var count = el('span', { class: 'count' });
-      function upd() {
-        if (!pf.limit) { count.textContent = ''; return; }
-        var n = ta.value.length;
-        count.textContent = n.toLocaleString() + ' / ' + pf.limit.toLocaleString() + ' characters';
-        count.classList.toggle('over', n > pf.limit);
-      }
-      function changed() { s[pf.key] = ta.value; saveSoon(); upd(); }
-      ta.addEventListener('input', changed);
-      upd();
-      var tips = {
-        instagram: 'Only the first line or two show before "more," so the hook goes first. Hashtags sit at the end.',
-        facebook: 'Hook first, then talk like you would to a friend. A question at the end gets comments.',
-        tiktok: 'Say it to camera. Hook in the first 3 seconds, then the script. Add the on-screen text and paste the caption when you post.'
-      };
-      panels.push({ id: pf.id, label: pf.label, node: el('div', { class: 'tabpanel' }, [
-        p(tips[pf.id], 'hint'),
-        labelRow(el('div', { class: 'mini', text: pf.id === 'tiktok' ? 'Your script' : 'Your caption' }), ta, changed), ta,
-        el('div', { class: 'actions' }, [
-          el('button', { type: 'button', class: 'btn small', text: pf.id === 'tiktok' ? 'Copy script' : 'Copy caption', onclick: function () { if (!ta.value.trim()) { toast('Nothing here yet.'); return; } copyText(ta.value, 'Copied for ' + pf.label + '.'); } }),
-          count
-        ])
-      ]) });
-    });
-
-    var card = el('div', { class: 'slot' });
-    card.appendChild(el('div', { class: 'slot-head' }, [el('span', { class: 'slot-where', text: sl.where })]));
-    if (sl.second) card.appendChild(p(currentFocus() === 'c' ? 'You focused on your community this week, so this one shares your offer.' : 'Share your community here, or a second offer.', 'hint'));
-    card.appendChild(el('div', { class: 'mini', text: 'What this post promotes' }));
-    card.appendChild(sel);
-
-    if (panels.length > 1) {
-      var active = slotTab[sl.key] && panels.some(function (x) { return x.id === slotTab[sl.key]; }) ? slotTab[sl.key] : 'skool';
-      var tabRow = el('div', { class: 'tabs', role: 'tablist', 'aria-label': 'Platforms' });
-      var body = el('div', {});
-      panels.forEach(function (pn) {
-        var b = el('button', { type: 'button', class: 'tab', role: 'tab', 'aria-selected': String(pn.id === active), text: pn.label });
-        b.addEventListener('click', function () {
-          stopMic(); slotTab[sl.key] = pn.id;
-          [].forEach.call(tabRow.children, function (x) { x.setAttribute('aria-selected', 'false'); });
-          b.setAttribute('aria-selected', 'true');
-          body.innerHTML = ''; body.appendChild(pn.node);
-        });
-        tabRow.appendChild(b);
-      });
-      body.appendChild(panels.filter(function (x) { return x.id === active; })[0].node);
-      card.appendChild(tabRow);
-      card.appendChild(body);
-    } else card.appendChild(skool);
-
-    card.appendChild(labelRow(el('div', { class: 'mini', text: 'Image' }), ip, ipChanged));
-    card.appendChild(ip);
-    card.appendChild(el('div', { class: 'actions' }, [
-      el('button', { type: 'button', class: 'btn small', text: 'Copy image prompt', onclick: function () { if (!s.imgPrompt.trim()) { toast('No image prompt yet.'); return; } copyText(s.imgPrompt, 'Image prompt copied.'); } })
-    ]));
-    card.appendChild(imgBox);
+    draw();
     return card;
   }
 
@@ -2152,7 +2262,7 @@
     var rows = [];
     if (pl && pl.what) rows.push(p(pl.what));
     var info = [];
-    if (t.days) info.push(el('li', {}, [el('strong', { text: 'Your promo days: ' }), t.days.length ? dayNames(t.days) : 'Any day']));
+    if (t.days) info.push(el('li', {}, [el('strong', { text: 'Your promo days: ' }), dayNames(t.days).charAt(0).toUpperCase() + dayNames(t.days).slice(1)]));
     if (t.rules) info.push(el('li', {}, [el('strong', { text: 'Your notes: ' }), t.rules]));
     if (pl && pl.earn) info.push(el('li', {}, [el('strong', { text: 'Earn: ' }), 'Has an affiliate program.']));
     if (info.length) rows.push(el('ul', { class: 'stars placelist' }, info));
@@ -2179,66 +2289,32 @@
     document.body.appendChild(wrap);
     closeBtn.focus();
   }
-  function normName(n) { return String(n || '').toLowerCase().replace(/[\u2122\u00ae]/g, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
-  function groupBody(s) {
-    var t = s.text || '', op = (s.opening || '').trim();
-    if (op && t.indexOf(op) === 0) return t.slice(op.length).replace(/^\s+/, '');
-    return (s.body || '').trim() || t;
-  }
-  /* The post for one group: its own opening stitched onto the shared body, or the main post. */
-  function groupPost(s, t) {
-    var v = !t.main && s.gv && s.gv[t.id];
-    if (v && (v.opening || '').trim()) return { title: (v.title || '').trim() || s.title, text: v.opening.trim() + '\n\n' + groupBody(s), own: true };
-    return { title: s.title, text: s.text, own: false };
-  }
-  var openShare = '';
-  function shareLinks(sl, day) {
-    var s = slotData(sl.key);
-    var targets = shareTargets(sl, day);
+  function shareLinks(s, day, redraw) {
+    var targets = shareTargets(day);
     var out = el('div', { class: 'sharearea' });
-    function draw() {
-      out.innerHTML = '';
-      var postedN = targets.filter(function (t) { return s.shared.indexOf(t.id) > -1; }).length;
-      out.appendChild(p(postedN === targets.length ? '✓ Posted in all ' + targets.length + ' groups' : 'Posted in ' + postedN + ' of ' + targets.length + ' groups. Tap ○ when you post.', 'postcount' + (postedN === targets.length ? ' all' : '')));
-      var wrap = el('div', { class: 'share' });
-      var panel = null;
-      targets.forEach(function (t) {
-        var key = sl.key + '|' + t.id, isOpen = openShare === key, done = s.shared.indexOf(t.id) > -1;
-        var btn = el('button', { type: 'button', class: 'sharebtn grpbtn' + (isOpen ? ' open' : '') + (done ? ' shared' : ''), 'aria-expanded': String(isOpen), onclick: function () {
-          openShare = isOpen ? '' : key; draw();
-          if (!isOpen) { var pn = out.querySelector('.grppanel'); if (pn && pn.scrollIntoView) pn.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
-        } }, [el('span', { text: t.name })]);
-        var check = el('button', { type: 'button', class: 'postcheck' + (done ? ' on' : ''), 'aria-pressed': String(done), 'aria-label': (done ? 'Posted in ' : 'Mark posted in ') + t.name, text: done ? '✓' : '', onclick: function () {
-          toggleIn(s.shared, t.id); save(); draw();
-          if (s.shared.indexOf(t.id) > -1) toast('Posted in ' + t.name + '.');
-        } });
-        wrap.appendChild(el('span', { class: 'sharepair' }, [check, btn,
-          el('button', { type: 'button', class: 'infobtn', 'aria-label': 'Details for ' + t.name, text: 'i', onclick: function (e) { groupPopup(t, e.currentTarget); } })]));
-        if (isOpen) panel = groupPanel(t, done);
-      });
-      out.appendChild(wrap);
-      if (panel) out.appendChild(panel);
-      out.appendChild(el('div', { class: 'findmore' }, [el('a', { href: '#', text: 'Find more groups ›', onclick: function (e) { e.preventDefault(); setView('places'); } })]));
-    }
-    function groupPanel(t, done) {
-      var gp = groupPost(s, t);
-      var kids = [el('h4', { text: t.name })];
-      if (!t.main && !gp.own) kids.push(p(s.text.trim() ? 'No version for this group yet, so this is your main post.' : 'Your post for this day is not written yet.', 'hint'));
-      kids.push(el('div', { class: 'mini', text: 'Title' }), el('div', { class: 'gpbox', text: gp.title || 'No title yet' }),
-        el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn small', text: 'Copy title', onclick: function () { if (!(gp.title || '').trim()) { toast('No title yet.'); return; } copyText(gp.title, 'Title copied.'); } })]),
-        el('div', { class: 'mini', text: 'Post' }), el('div', { class: 'gpbox post', text: gp.text || 'No post yet' }),
-        el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn small', text: 'Copy post', onclick: function () { if (!(gp.text || '').trim()) { toast('No post yet.'); return; } copyText(gp.text, 'Post copied.'); } })]));
-      if (t.main && t.rules) kids.push(p(t.rules, 'hint'));
-      kids.push(el('div', { class: 'actions' }, [
-        t.url ? el('a', { class: 'btn main small', href: t.url, target: '_blank', rel: 'noopener noreferrer', text: 'Open ' + t.name + ' ↗' }) : el('span', { class: 'hint', text: 'Add a link for this group in Write my promos.' }),
-        el('button', { type: 'button', class: 'btn small' + (done ? ' on' : ''), 'aria-pressed': String(done), text: done ? '✓ Posted' : 'Mark as posted', onclick: function () {
-          toggleIn(s.shared, t.id); save(); draw();
-          if (s.shared.indexOf(t.id) > -1) toast('Posted in ' + t.name + '.');
-        } })
-      ]));
-      return el('div', { class: 'grppanel' }, kids);
-    }
-    draw();
+    var postedN = targets.filter(function (t) { return s.posted[t.id]; }).length;
+    var all = postedN === targets.length;
+    out.appendChild(p(all ? (targets.length === 1 ? '✓ Posted' : '✓ Posted in all ' + targets.length + ' groups') : 'Posted in ' + postedN + ' of ' + targets.length + (targets.length === 1 ? ' group' : ' groups'), 'postcount' + (all ? ' all' : '')));
+    if (!all) out.appendChild(p('Tap ○ after you post. It remembers which version you used, so you can share a different one in your next group.', 'hint'));
+    var wrap = el('div', { class: 'share' });
+    targets.forEach(function (t) {
+      var vid = s.posted[t.id], done = !!vid;
+      var cur = s.versions[s.active];
+      var check = el('button', { type: 'button', class: 'postcheck' + (done ? ' on' : ''), 'aria-pressed': String(done), 'aria-label': done ? 'Posted in ' + t.name + ' with ' + versionName(s, vid) + '. Tap to undo.' : 'Mark posted in ' + t.name + ' with ' + (cur.name || 'this version'), text: done ? '✓' : '', onclick: function () {
+        if (done) delete s.posted[t.id]; else s.posted[t.id] = cur.id;
+        save(); redraw();
+        if (!done) toast('Posted in ' + t.name + ' with ' + (cur.name || 'this version') + '.');
+      } });
+      var link = t.url
+        ? el('a', { class: 'sharebtn grpbtn' + (done ? ' shared' : ''), href: t.url, target: '_blank', rel: 'noopener noreferrer' }, [el('span', { text: t.name }), el('span', { class: 'arr', 'aria-hidden': 'true', text: '↗' })])
+        : el('span', { class: 'sharebtn nolink', text: t.name });
+      wrap.appendChild(el('span', { class: 'sharepair' }, [check, link,
+        done ? el('span', { class: 'vbadge', text: versionName(s, vid) }) : null,
+        el('button', { type: 'button', class: 'infobtn', 'aria-label': 'Details for ' + t.name, text: 'i', onclick: function (e) { groupPopup(t, e.currentTarget); } })]));
+    });
+    out.appendChild(wrap);
+    if (targets.length === 1) out.appendChild(p('Add the other groups you post in, and they show up here on the days you can promote.', 'hint'));
+    out.appendChild(el('div', { class: 'findmore' }, [el('a', { href: '#', text: 'Find more groups ›', onclick: function (e) { e.preventDefault(); setView('places'); } })]));
     return out;
   }
 
@@ -2345,19 +2421,29 @@
   function placeByKey(k) { return PLACES.filter(function (pl) { return placeKey(pl) === k; })[0]; }
   function groupFromPlace(pl) {
     var notes = [];
-    return { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), name: pl.name, url: placeKey(pl), rules: notes.join(' '), days: (pl.days || []).slice(), place: placeKey(pl) };
+    return { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), name: pl.name, url: placeKey(pl), rules: notes.join(' '), days: [], place: placeKey(pl) };
   }
   /* Adds any place from Places to promote that this planner hasn't seen yet. Removed groups stay removed. */
+  /* Every place from Places to promote is in each member's list. Days decide where it shows. */
   function seedPlaces() {
     var w = state.week, changed = false;
-    if (!Array.isArray(w.seeded)) w.seeded = [];
+    if (!w.daysV2) {
+      w.groups.forEach(function (g) { if (!g.days.length) g.days = [0, 1, 2, 3, 4, 5, 6]; });
+      w.daysV2 = true; changed = true;
+    }
     PLACES.forEach(function (pl) {
       var k = placeKey(pl);
-      if (w.seeded.indexOf(k) > -1) return;
-      w.seeded.push(k); changed = true;
-      var have = w.groups.filter(function (g) { return (g.url || '').split('?')[0].replace(/\/about\/?$/, '').toLowerCase() === k || g.name.trim().toLowerCase() === pl.name.toLowerCase(); })[0];
-      if (have) { if (!have.place) have.place = k; return; }
-      w.groups.push(groupFromPlace(pl));
+      var all = w.groups.filter(function (g) { return groupKeyMatch(g, pl); });
+      if (!all.length) { w.groups.push(groupFromPlace(pl)); changed = true; return; }
+      var keep = all.filter(function (g) { return g.days.length; })[0] || all[0];
+      if (keep.place !== k) { keep.place = k; changed = true; }
+      all.forEach(function (g) {
+        if (g === keep) return;
+        g.days.forEach(function (n) { if (keep.days.indexOf(n) === -1) keep.days.push(n); });
+        keep.days.sort();
+        if (!keep.rules && g.rules) keep.rules = g.rules;
+        w.groups.splice(w.groups.indexOf(g), 1); changed = true;
+      });
     });
     if (changed) save();
   }
@@ -2368,112 +2454,102 @@
     });
   }
   function dayNames(days) {
-    if (!days || !days.length) return 'any day';
+    if (!days || !days.length) return 'no days yet';
+    if (days.length === 7) return 'every day';
     var n = days.map(function (i) { return DAYS[i]; });
     return n.length === 1 ? n[0] : n.slice(0, -1).join(', ') + ' and ' + n[n.length - 1];
   }
+  function dayPicker(g) {
+    var items = [{ id: 'all', label: 'Every day' }].concat(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }));
+    return chipRow(items, function (id) { return id === 'all' ? g.days.length === 7 : g.days.indexOf(Number(id)) > -1; }, function (id) {
+      if (id === 'all') g.days = g.days.length === 7 ? [] : [0, 1, 2, 3, 4, 5, 6];
+      else { toggleIn(g.days, Number(id)); g.days.sort(); }
+      save(); renderNav(); renderKeep();
+    }, 'Days you can promote in ' + (g.name || 'this group'));
+  }
   function renderPlaces() {
     var box = $('view'); box.innerHTML = '';
+    var w = state.week;
+    seedPlaces();
     box.appendChild(el('div', {}, [
-      p('More places to share', 'eyebrow'),
+      p('Set up once · 3 of 3', 'eyebrow'),
       el('h1', {}, ['Places to ', el('em', { text: 'promote' })]),
-      p('Communities where you can share your offer. The more rooms you post in, the more people see you. Add any of them to your planner in one tap and they show up on your day pages.', 'lede'),
+      p('Promo communities where you can share your offer. Tap the days you can post in each one, and it shows up on those day pages with your post ready to copy.', 'lede'),
+      el('div', { class: 'callout' }, [el('strong', { text: 'Set your days to your plan. ' }), "Free and premium members often get different days, so check each group's rules and tap the days that match the plan you joined. Not in a group? Leave its days off and it won't show up."]),
       p('Some of these links are my affiliate links. If you join through them, I may earn a commission.', 'where'),
       p(PLACES_NOTE, 'where'),
-      el('div', { class: 'callout' }, [el('strong', { text: 'Set your days to your plan. ' }), TIER_NOTE.replace('Set your promo days to match the plan you joined. ', '')])
-    ]));
-    var w = state.week;
-    var shown = PLACES.filter(function (pl) {
-      return placeFilter.every(function (t) { return t === 'mine' ? placeAdded(pl) : (pl.tags || []).indexOf(t) > -1; });
-    });
-    var ownGroups = w.groups.filter(function (g) { return !g.place && !PLACES.some(function (pl) { return groupKeyMatch(g, pl); }); });
-    var showOwn = placeFilter.every(function (t) { return t === 'mine'; }) ? ownGroups : [];
-    var total = shown.length + showOwn.length, all = PLACES.length + ownGroups.length;
-    var tags = [{ id: 'mine', label: '✓ In my groups' }].concat(PLACE_TAGS);
-    box.appendChild(el('section', { class: 'card placefilter', 'aria-label': 'Find the right group' }, [
-      el('h3', { text: 'Find the right group' }),
-      p('Tap what matters to you. Tap more than one to narrow it down.', 'hint'),
-      el('div', { class: 'chips', role: 'group', 'aria-label': 'Filter places' }, tags.map(function (t) {
-        var on = placeFilter.indexOf(t.id) > -1;
-        return el('button', { type: 'button', class: 'chip', 'aria-pressed': String(on), text: t.label, onclick: function () {
-          if (on) placeFilter = placeFilter.filter(function (x) { return x !== t.id; }); else placeFilter.push(t.id);
-          renderPlaces();
-        } });
-      })),
-      el('div', { class: 'actions' }, [
-        el('span', { class: 'hint', 'aria-live': 'polite', text: placeFilter.length ? 'Showing ' + total + ' of ' + all + ' groups' : 'Showing all ' + all + ' groups' }),
-        placeFilter.length ? el('button', { type: 'button', class: 'btn small', text: 'Clear filters', onclick: function () { placeFilter = []; renderPlaces(); } }) : null
-      ]),
       el('div', { class: 'actions' }, [
         el('button', { type: 'button', class: 'btn', text: '+ Add a group', onclick: function () {
-          var id = String(Date.now()); w.groups.push({ id: id, name: '', url: '', rules: '', days: [], place: '' }); openGroups.push(id);
-          if (placeFilter.some(function (t) { return t !== 'mine'; })) placeFilter = [];
-          save(); renderNav(); renderPlaces();
+          w.groups.unshift({ id: String(Date.now()), name: '', url: '', rules: '', days: [], place: '' });
+          save(); renderPlaces();
           setTimeout(function () { var c = document.querySelector('.owncard .input'); if (c) { c.scrollIntoView({ block: 'center' }); c.focus(); } }, 30);
         } }),
-        el('span', { class: 'hint', text: 'A group not on this list? Add it here.' })
+        el('span', { class: 'hint', text: 'Post in a group that is not on this list? Add it.' })
       ])
     ]));
+
     var grid = el('div', { class: 'placegrid' });
     box.appendChild(grid);
-    showOwn.forEach(function (g) {
-      var isOpen = openGroups.indexOf(g.id) > -1;
+    grid.appendChild(el('section', { class: 'card placecard homecard', 'aria-label': 'She Promotes' }, [
+      el('h3', { text: 'She Promotes\u2122' }),
+      p('Your home base. It is always on your day pages, every day.'),
+      el('ul', { class: 'stars placelist' }, [
+        el('li', {}, [el('strong', { text: 'Premium: ' }), 'Post twice a day, one for your community and one for an offer.']),
+        el('li', {}, [el('strong', { text: 'Where: ' }), 'The \uD83D\uDC96 Premium Promo (Daily) category.'])
+      ]),
+      el('div', { class: 'actions' }, [el('a', { class: 'btn main', href: SHE_PROMOTES_URL, target: '_blank', rel: 'noopener noreferrer', text: 'Open She Promotes\u2122 \u2197' })])
+    ]));
+    w.groups.filter(function (g) { return !g.place; }).forEach(function (g) {
+      var nm = el('input', { class: 'input', type: 'text', placeholder: 'Group name', 'aria-label': 'Group name' });
+      nm.value = g.name;
+      nm.addEventListener('input', function () { g.name = nm.value; saveSoon(); });
+      nm.addEventListener('change', function () { save(); renderNav(); });
+      var lk = el('input', { class: 'input', type: 'url', inputmode: 'url', placeholder: 'Link to the group (https://...)', 'aria-label': 'Group link' });
+      lk.value = g.url || '';
+      lk.addEventListener('input', function () { g.url = lk.value.trim(); saveSoon(); });
       grid.appendChild(el('section', { class: 'card placecard owncard', 'aria-label': g.name.trim() || 'Your own group' }, [
-        el('h3', { text: g.name.trim() || 'New group' }),
-        p('Your own group. You promote here ' + (g.days.length ? 'on ' + dayNames(g.days) : 'any day') + '.' + (g.url ? '' : ' Add its link so it opens from your day pages.'), 'hint'),
-        isOpen ? groupEditor(g, true) : null,
-        isOpen ? null : el('div', { class: 'actions' }, [
-          g.url ? el('a', { class: 'btn main', href: g.url, target: '_blank', rel: 'noopener noreferrer', text: 'Open ↗' }) : null,
-          el('span', { class: 'btn', 'aria-disabled': 'true', text: '✓ In my groups' }),
-          el('button', { type: 'button', class: 'btn small', text: 'Edit', onclick: function () { toggleGroupEdit(g.id); } }),
+        el('h3', { text: g.name.trim() || 'Your group' }),
+        p('A group you added.', 'hint'),
+        nm, lk,
+        el('div', { class: 'mini', text: 'Days you can promote here' }),
+        dayPicker(g),
+        el('div', { class: 'actions' }, [
+          g.url ? el('a', { class: 'btn small', href: g.url, target: '_blank', rel: 'noopener noreferrer', text: 'Open ↗' }) : null,
           twoStep('Remove', 'Tap again to remove', function () { removeGroup(function (x) { return x.id === g.id; }); })
         ])
       ]));
     });
-    if (!total) box.appendChild(el('section', { class: 'card soon-card' }, [
-      el('div', { class: 'glyph', 'aria-hidden': 'true', text: '✦' }),
-      p('No group has all of those yet. Try taking one away.', 'hint')
-    ]));
-    shown.forEach(function (pl) {
-      var added = placeAdded(pl);
-      var mine = added ? w.groups.filter(function (g) { return groupKeyMatch(g, pl); })[0] : null;
-      var editing = mine && openGroups.indexOf(mine.id) > -1;
-      var rows = [el('li', {}, [el('strong', { text: 'Promo days: ' }), placeDays(pl)])];
-      if (pl.earn) rows.push(el('li', {}, [el('strong', { text: 'Earn: ' }), 'Has an affiliate program.']));
+    PLACES.forEach(function (pl) {
+      var g = w.groups.filter(function (x) { return groupKeyMatch(x, pl); })[0];
+      if (!g) return;
       grid.appendChild(el('section', { class: 'card placecard', 'aria-label': pl.name }, [
         el('h3', { text: pl.name }),
         p(pl.what),
-        el('ul', { class: 'stars placelist' }, rows),
-        mine ? p('In your planner: you promote here ' + (mine.days.length ? 'on ' + dayNames(mine.days) : 'any day') + '.', 'hint') : null,
-        editing ? groupEditor(mine, false) : null,
-        editing ? null : el('div', { class: 'actions' }, [
-          el('a', { class: 'btn main', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Join ↗' }),
-          added
-            ? el('span', { class: 'inline-acts' }, [
-                el('span', { class: 'btn', 'aria-disabled': 'true', text: '✓ In my groups' }),
-                mine ? el('button', { type: 'button', class: 'btn small', text: 'Edit days', onclick: function () { toggleGroupEdit(mine.id); } }) : null,
-                twoStep('Remove', 'Tap again to remove', function () { removeGroup(function (g) { return groupKeyMatch(g, pl); }); })
-              ])
-            : el('button', { type: 'button', class: 'btn', text: '+ Add to my groups', onclick: function () {
-                state.week.groups.push(groupFromPlace(pl));
-                save(); renderNav(); renderKeep();
-                toast('Added. Check that its days match the plan you joined.');
-              } })
+        pl.earn ? el('ul', { class: 'stars placelist' }, [el('li', {}, [el('strong', { text: 'Earn: ' }), 'Has an affiliate program.'])]) : null,
+        el('div', { class: 'mini', text: 'Days you can promote here' }),
+        dayPicker(g),
+        p(g.days.length ? 'Shows on your day pages ' + (g.days.length === 7 ? 'every day' : 'on ' + dayNames(g.days)) + '.' : "Not on your day pages yet. Tap your days once you've joined.", 'hint'),
+        el('div', { class: 'actions' }, [
+          el('a', { class: 'btn main', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Join ↗' })
         ])
       ]));
     });
-    box.appendChild(p('Upgraded to premium in one of these groups? Tap Edit days on it and turn on your new days.', 'saved-note'));
+    box.appendChild(el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Done. Write my promos', onclick: function () { setView('write'); } })]));
   }
 
   /* ---------- post library ---------- */
   function archiveWeek() {
     var w = state.week, label = fmtDate(weekDate(0)), added = 0;
-    planList().forEach(function (it) {
-      var s = w.slots[it.sl.key];
-      if (!s || !(s.text || '').trim()) return;
-      var offer = it.pick === 'c' ? state.business.community.name.trim() + (it.draw && it.draw !== 'any' ? ': ' + it.draw : '') : (it.pick === 'x' ? 'Something else' : pickLabel(it.pick));
-      state.archive.unshift({ id: newId(), week: label, day: DAYS[it.day], offer: offer, title: s.title || '', text: s.text, ig: s.ig || '', fb: s.fb || '', tt: s.tt || '', imgPrompt: s.imgPrompt || '' });
-      added++;
+    buildSlots().forEach(function (list, day) {
+      list.forEach(function (sl) {
+        var s = w.slots[sl.key];
+        if (!s || !Array.isArray(s.versions)) return;
+        s.versions.forEach(function (v) {
+          if (!(v.text || '').trim()) return;
+          state.archive.unshift({ id: newId(), week: label, day: DAYS[day] + ', ' + (v.name || 'Version'), offer: 'Week of ' + label, title: v.title || '', text: v.text, ig: '', fb: '', tt: '', imgPrompt: '' });
+          added++;
+        });
+      });
     });
     state.archive = state.archive.slice(0, 200);
     return added;
@@ -2498,7 +2574,7 @@
     box.appendChild(el('div', {}, [
       p('Your library', 'eyebrow'),
       el('h1', {}, ['My post ', el('em', { text: 'library' })]),
-      p('Every post you write is saved here when you start a new week, sorted by offer. Copy one to use again, or let Claude give it a fresh hook and angle.', 'lede')
+      p('Every post and version is saved here when you start a new week, sorted by week. Copy one to use again, or let Claude give it a fresh hook and angle.', 'lede')
     ]));
     if (!A.length) {
       box.appendChild(el('section', { class: 'card soon-card' }, [
@@ -2760,7 +2836,7 @@
 
     box.appendChild(el('section', { class: 'card', 'aria-label': 'Start a new week' }, [
       el('h3', { text: 'Start a new week' }),
-      p("This week's numbers move to Past weeks, and your posts move to My post library. Images and completed days clear. Your groups, focus, days off and stats all stay, and the planner moves to the next week.", 'hint'),
+      p("This week's numbers move to Past weeks, and your posts move to My post library. Images and completed days clear. Your groups, days off and stats all stay, and the planner moves to the next week.", 'hint'),
       el('div', { class: 'actions' }, [
         twoStep('Start my new week', 'Tap again to start fresh', function () {
           var vals = {}, names = {}, kinds = {};
@@ -2789,9 +2865,11 @@
   }
 
   /* ---------- week setup (used on Write my promos) ---------- */
+  function normName(n) { return String(n || '').toLowerCase().replace(/[\u2122\u00ae]/g, '').replace(/^the\s+/, '').replace(/[^a-z0-9]+/g, ' ').trim(); }
+  function skoolSlug(u) { var m = /skool\.com\/([^\/?#]+)/i.exec(String(u || '')); return m ? m[1].toLowerCase() : ''; }
   function groupKeyMatch(g, pl) {
-    var k = placeKey(pl);
-    return g.place === k || (g.url || '').split('?')[0].replace(/\/about\/?$/, '').toLowerCase() === k || g.name.trim().toLowerCase() === pl.name.toLowerCase();
+    var k = placeKey(pl), slug = skoolSlug(pl.link);
+    return g.place === k || (slug && skoolSlug(g.url) === slug) || (normName(g.name) && normName(g.name) === normName(pl.name));
   }
   function toggleGroupEdit(id) {
     if (openGroups.indexOf(id) > -1) openGroups = openGroups.filter(function (x) { return x !== id; }); else openGroups.push(id);
@@ -2814,7 +2892,7 @@
     rl.value = g.rules || '';
     rl.addEventListener('input', function () { g.rules = rl.value; saveSoon(); });
     kids.push(rl,
-      p('Which days can you promote there on the plan you joined? Leave them all off if any day works. Upgraded to premium? Turn on your new days.', 'help'),
+      p('Which days can you promote there on the plan you joined? Leave them all off if you can promote every day.', 'help'),
       chipRow(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }), function (id) { return g.days.indexOf(Number(id)) > -1; }, function (id) { toggleIn(g.days, Number(id)); g.days.sort(); save(); renderKeep(); }, 'Promo days'),
       el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn small main', text: 'Done', onclick: function () { save(); toggleGroupEdit(g.id); } })]));
     return el('div', { class: 'grp' }, kids);
@@ -2838,41 +2916,16 @@
       var v = dateInput.value; if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
       var pr = v.split('-').map(Number), dt = new Date(pr[0], pr[1] - 1, pr[2]);
       var dow = (dt.getDay() + 6) % 7; dt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - dow);
-      w.start = ymd(dt); save(); renderKeep();
+      w.start = ymd(dt); save(); renderNav(); renderKeep();
     });
-
-    var names = w.groups.map(function (g) { return g.name.trim(); }).filter(Boolean);
-    var grpWrap = el('div', {}, [
-      p(names.length ? 'You share in She Promotes™, ' + names.join(', ') + '.' : 'You share in She Promotes™. Add more groups to get seen by more people.', 'grp-rules'),
-      el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn', text: names.length ? 'Change my promo groups' : 'Choose my promo groups', onclick: function () { setView('places'); } })])
-    ]);
-
-    return el('section', { class: 'card', 'aria-label': 'Plan your week' }, [
-      el('h3', { text: 'Plan your week' }),
+    var names = w.groups.filter(function (g) { return g.days.length; }).map(function (g) { return g.name.trim(); }).filter(Boolean);
+    return el('section', { class: 'card', 'aria-label': 'Your week' }, [
+      el('h3', { text: 'Your week' }),
       el('div', { class: 'field' }, [el('label', { for: dateId, text: 'Week of' }), p('Pick any day and it moves to that Monday.', 'help'), dateInput]),
       el('div', { class: 'field' }, [
-        el('label', { text: 'Where else do you post?' }),
-        p('Skool and your promo groups are always on. Tap any other place you post and Claude writes a version of each day\'s post for it.', 'help'),
-        chipRow(PLATFORMS.map(function (pf) { return { id: pf.id, label: pf.label }; }), function (id) { return w.platforms.indexOf(id) > -1; }, function (id) { toggleIn(w.platforms, id); save(); renderKeep(); }, 'Other platforms')
-      ]),
-      el('div', { class: 'field' }, [
-        el('label', { text: 'Your focus this week' }),
-        p('Promote one thing all week, or rotate your offers. If you focus on your community, your Thursday second post shares your offer.', 'help'),
-        chipRow(focusChoices(), function (id) { return currentFocus() === id; }, function (id) {
-          w.focus = id;
-          Object.keys(w.slots).forEach(function (k) { w.slots[k].offer = ''; });
-          save(); renderKeep(); toast('Your posts now follow your focus.');
-        }, 'Your focus this week')
-      ]),
-      el('div', { class: 'field' }, [
         el('label', { text: 'Days off' }),
-        p("Tap any day you're taking off. It comes off your plan.", 'help'),
-        chipRow(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }), function (id) { return w.rest.indexOf(Number(id)) > -1; }, function (id) { toggleIn(w.rest, Number(id)); save(); renderKeep(); }, 'Days off')
-      ]),
-      el('div', { class: 'field' }, [
-        el('label', { text: 'Your promo groups' }),
-        p('Pick your groups in Places to promote. Each day page shows the groups you can post in that day.', 'help'),
-        grpWrap
+        p("Tap any day you're taking off.", 'help'),
+        chipRow(DAY_SHORT.map(function (n, i) { return { id: String(i), label: n }; }), function (id) { return w.rest.indexOf(Number(id)) > -1; }, function (id) { toggleIn(w.rest, Number(id)); save(); renderNav(); renderKeep(); }, 'Days off')
       ])
     ]);
   }
@@ -2880,16 +2933,11 @@
   var openGroups = [];
   var SHE_PROMOTES_URL = 'https://www.skool.com/she-promotes-7924';
   function groupsForDay(i) {
-    return state.week.groups.filter(function (g) { return !g.days.length || g.days.indexOf(i) > -1; }).map(function (g) { return { id: g.id, name: g.name.trim() || 'Another promo group', url: /^https?:\/\//i.test(g.url || '') ? g.url : '', rules: (g.rules || '').trim(), days: g.days.slice(), place: g.place || '' }; });
+    return state.week.groups.filter(function (g) { return g.days.indexOf(i) > -1; }).map(function (g) { return { id: g.id, name: g.name.trim() || 'Another promo group', url: /^https?:\/\//i.test(g.url || '') ? g.url : '', rules: (g.rules || '').trim(), days: g.days.slice(), place: g.place || '' }; });
   }
-  function shareTargets(sl, day) {
-    var sp = { id: 'sp', main: true, name: 'She Promotes™', url: SHE_PROMOTES_URL, rules: sl.second ? 'Thursday second post. Post it in the \uD83D\uDC96 Premium Promo (Daily) category.' : 'Post it in the \uD83D\uDC96 Premium Promo (Daily) category.' };
-    if (sl.second) return [sp];
+  function shareTargets(day) {
+    var sp = { id: 'sp', name: 'She Promotes™', url: SHE_PROMOTES_URL, rules: 'Premium members post twice a day, one for your community and one for an offer. Post in the 💖 Premium Promo (Daily) category.' };
     return [sp].concat(groupsForDay(day));
-  }
-  function shareText(sl, day) {
-    if (sl.second) return 'She Promotes™ (Thursday is premium double post day)';
-    return shareTargets(sl, day).map(function (t) { return t.name; }).join(', ');
   }
 
   /* ---------- the plan, flattened ---------- */
@@ -2963,255 +3011,161 @@
   /* ---------- the prompt ---------- */
   function line(label, v) { v = (v || '').trim(); return v ? label + ': ' + v : null; }
   function joinLines(arr) { return arr.filter(function (x) { return x != null; }).join('\n'); }
-  function voiceBlock() {
-    var b = state.business, out = [];
-    if (b.website.trim()) out.push('Before you write, open my website and read it to pick up my voice and how I talk about my work: ' + b.website.trim() + ". If you can't open it, use what's below.");
-    if (b.about.trim()) out.push('\nMY ABOUT TEXT\n' + b.about.trim());
-    var best = [];
-    if (b.best.trim()) best.push(b.best.trim());
-    state.library.slice(0, 3).forEach(function (x) { best.push((x.title ? x.title + '\n' : '') + x.text.slice(0, 1500)); });
-    if (best.length) out.push('\nPOSTS OF MINE THAT DID WELL (match this voice and whatever made them work)\n' + best.join('\n\n---\n\n'));
-    if (b.admire.trim()) out.push('\nPOSTS I ADMIRE FROM OTHERS (learn the hook style, structure and length. Never copy their words or ideas.)\n' + b.admire.trim() + (b.admireWhy.trim() ? '\nWhat I like about them: ' + b.admireWhy.trim() : ''));
-    var notes = [];
-    if ((state.results.current.notes || '').trim()) notes.push(state.results.current.notes.trim());
-    state.results.history.slice(0, 3).forEach(function (h) { if (h.notes) notes.push('Week of ' + h.label + ': ' + h.notes); });
-    if (notes.length) out.push("\nWHAT'S BEEN WORKING FOR ME LATELY\n" + notes.join('\n'));
-    return out.length ? '\nLEARN MY VOICE\n' + out.join('\n') : null;
-  }
-  function platformBlock(plats) {
-    if (!plats.length) return null;
-    var rules = {
-      instagram: 'INSTAGRAM: a caption under 2,000 characters. The hook is the first line, since only the first line or two show before "more." Short paragraphs with line breaks. End with an Instagram-friendly call to action, like comment a word or tap the link in my bio. Then 3 to 5 relevant hashtags at the very end.',
-      facebook: 'FACEBOOK: up to 2,000 characters. Hook in the first line. Warm and conversational. End with a question that invites comments, then the link if I gave one. No more than 2 hashtags.',
-      tiktok: 'TIKTOK: a 30 to 45 second video script I say to camera. Use these parts on their own lines: HOOK (what I say in the first 3 seconds), SCRIPT (short spoken lines), ON SCREEN TEXT (a few words), CAPTION (one or two lines plus 3 to 5 hashtags).'
-    };
-    return '\nALSO WRITE A VERSION FOR EACH PLATFORM I USE\nSame message and offer as the main post, reshaped for the platform. No titles. All the writing rules above still apply.\n' + plats.map(function (x) { return '- ' + rules[x.id]; }).join('\n');
-  }
-  function buildPrompt() {
-    var b = state.business, d = state.design, plan = planList(), plats = activePlatforms();
+  var CLAUDE_URL = 'https://claude.ai/new';
+  function designBlock() {
+    var d = state.design, design = [];
     var T = TYPES.filter(function (t) { return t.id === d.type; })[0];
     var A = AUTH.filter(function (a) { return a.id === d.authority; })[0];
     var L = PROMO_TYPE[d.type];
     var P = PROFILES[d.profile];
-
+    if (!(d.done && T)) return null;
+    design.push('Type: ' + T.label + '. ' + L.strategy);
+    design.push('How I promote best: ' + L.how.join(' '));
+    design.push('My call to action style: ' + L.cta);
+    design.push("How I'm built to sell: " + L.sell.join(' ') + ' Shape each invitation to fit this.');
+    if (A) design.push('Authority: ' + A.label + '. ' + A.line);
+    if (P) design.push('Profile: ' + d.profile + ' ' + P.name + '. ' + P.text);
+    if (d.open.indexOf('throat') > -1) design.push('Throat: open. ' + OPEN_THROAT.para);
+    else d.channels.forEach(function (id) {
+      var c = THROAT_CH.filter(function (x) { return x.id === id; })[0];
+      if (c) design.push('Throat channel ' + c.id + ' ' + c.name + ': ' + c.blurb);
+    });
+    var tg = throatGates(d);
+    if (tg.length) design.push('My throat gates (natural ways I speak): ' + tg.map(function (g) { return 'Gate ' + g + ' "' + GATE_VOICE[g] + '"'; }).join(', ') + '. Use these voices to open some of the posts.');
+    return '\nHOW I\'M BUILT TO PROMOTE (MY HUMAN DESIGN)\n' + design.join('\n');
+  }
+  function lensBlock() {
+    var d = state.design;
+    var open = CENTERS.filter(function (c) { return d.open.indexOf(c.id) > -1; });
+    if (!d.done || !open.length) return '\nWRITE THROUGH MY HUMAN DESIGN\nI haven\'t added my open centers yet. Before you plan my first week, ask me which centers are white (open) on my chart, then use them as the lens for every post the way Human Design describes.';
+    var out = [
+      '',
+      'WRITE THROUGH MY HUMAN DESIGN (THE LENS FOR EVERY POST)',
+      "In Human Design, my open centers are where I take in other people's energy. I've lived what my soulmate client lives in these places, so this is where they find me and where my words land. These are my open centers, and what the people they draw to me are going through:",
+      ''
+    ];
+    open.forEach(function (c) {
+      var O = OPEN_DATA[c.id];
+      out.push('OPEN ' + c.label.toUpperCase());
+      out.push('- Who it draws to me: ' + O.soul);
+      out.push("- What they're struggling with: " + O.feel);
+      out.push('- The voice in their head: ' + OPEN_VOICE[c.id]);
+      out.push('- How to speak to it: ' + O.promo.replace(/^Open your promo/, 'Open the post').replace(/\bYour\b/g, 'My').replace(/\byour\b/g, 'my'));
+      out.push('');
+    });
+    out.push('HOW TO USE THIS');
+    out.push('- Write every post through one of these lenses. In the weekly plan, label each post with its lens, like "Lens: Open ' + open[0].label + '," and rotate through my open centers across the week.');
+    out.push("- Start with that lens's struggle as a micro-moment from my Client Mirror Sheet. Say the voice in their head in their words. Then speak to it the way that lens describes, and bring in the offer as the way through.");
+    out.push("- I mirror them here. When it fits, add a small, real moment from my own life that shows I've felt this too. Only use what I've told you.");
+    out.push('- Never use Human Design words in the post, like open, undefined, center or defined. The reader should feel understood, not taught.');
+    out.push('- If I ask for another version, try a different lens for it.');
+    return out.join('\n');
+  }
+  function buildPrompt() {
+    var b = state.business, so = state.soul;
     var offers = b.offers.filter(function (o) { return o.name.trim(); }).map(function (o, i) {
       return joinLines(['Offer ' + (i + 1) + ': ' + o.name.trim(), line('What it is', o.what), line('Type', o.format), line('Price', o.price), line('Link', o.link)]);
     });
     var com = b.community.name.trim() ? joinLines(['My community: ' + b.community.name.trim(), line('What happens inside', b.community.what), drawList().length ? 'The specific things inside people join for:\n' + drawList().map(function (n) { return '- ' + itemInfo(n); }).join('\n') : null, line('Link', b.community.link)]) : '';
-
-    var design = [];
-    if (d.done && T) {
-      design.push('Type: ' + T.label + '. ' + L.strategy);
-      design.push('How I promote best: ' + L.how.join(' '));
-      design.push('My call to action style: ' + L.cta);
-      design.push("How I'm built to sell: " + L.sell.join(' ') + ' Shape each invitation to fit this.');
-      if (A) design.push('Authority: ' + A.label + '. ' + A.line);
-      if (P) design.push('Profile: ' + d.profile + ' ' + P.name + '. ' + P.text);
-      if (d.open.indexOf('throat') > -1) design.push('Throat: open. ' + OPEN_THROAT.para);
-      else d.channels.forEach(function (id) {
-        var c = THROAT_CH.filter(function (x) { return x.id === id; })[0];
-        if (c) design.push('Throat channel ' + c.id + ' ' + c.name + ': ' + c.blurb);
-      });
-      var tg = throatGates(d);
-      if (tg.length) design.push('My throat gates (natural ways I speak): ' + tg.map(function (g) { return 'Gate ' + g + ' "' + GATE_VOICE[g] + '"'; }).join(', ') + '. Use these voices to open some of the posts.');
-      CENTERS.filter(function (c) { return d.open.indexOf(c.id) > -1; }).forEach(function (c) {
-        var O = OPEN_DATA[c.id];
-        design.push('Open ' + c.label + ': my buyers carry ' + O.feel.charAt(0).toLowerCase() + O.feel.slice(1) + ' ' + O.promo);
-      });
-    }
-
-    var weekGroups = [], anyGV = false;
-    var posts = plan.map(function (it, n) {
-      var gs = it.sl.second ? [] : groupsForDay(it.day);
-      gs.forEach(function (t) { if (!weekGroups.some(function (x) { return x.id === t.id; })) weekGroups.push(t); });
-      if (gs.length) anyGV = true;
-      var what = it.pick === 'x' ? 'Something else about my business. Pick what fits best.' : it.pick === 'c' ? state.business.community.name.trim() + ', promoting one specific thing inside: ' + (it.draw && it.draw !== 'any' ? itemInfo(it.draw) : 'pick the one thing my soulmate client would want most right now') : pickLabel(it.pick);
-      return 'POST ' + (n + 1) + ': ' + DAYS[it.day] + ' ' + fmtDate(weekDate(it.day)) + (it.sl.second ? ' (second post of the day, Skool only)' : '') + '. Promotes: ' + what + (gs.length ? '\n   Group versions for: ' + gs.map(function (t) { return t.name; }).join(', ') : '\n   No group versions for this post.');
-    });
-    var groupInfo = weekGroups.map(function (t) {
-      var pl = t.place ? placeByKey(t.place) : null;
-      return '- ' + t.name + ': ' + (pl && pl.what ? pl.what : 'A promo group for business owners. No description, so keep its opening right for any business owner.');
-    });
+    var voice = [];
+    if (b.website.trim()) voice.push('Before you write, open my website and read it to pick up my voice and how I talk about my work: ' + b.website.trim() + ". If you can't open it, use what's below.");
+    if (b.about.trim()) voice.push('MY ABOUT TEXT\n' + b.about.trim());
+    var groups = state.week.groups.filter(function (g) { return g.days.length; }).map(function (g) { return g.name.trim(); }).filter(Boolean);
+    var sheet = so.include !== false && so.sheet.trim();
+    var hasPay = b.offers.some(function (o) { return o.format === 'Affiliate Product' && o.name.trim(); });
 
     return joinLines([
-      "You're helping me write a week of promo posts for the Skool communities where I promote my business. Write them in my voice, shaped by my Human Design, so promoting feels natural for me.",
+      "You're my promo writing partner. Keep everything below as your standing instructions. Every week I'll ask you to help me write promo posts for the Skool communities and promo groups where I share my business. Write them in my voice, shaped by my Human Design and the sales psychology below, so promoting feels natural for me and the people reading feel seen.",
       '',
-      'ABOUT MY BUSINESS',
+      'ABOUT ME AND MY BUSINESS',
       line('My name', b.you),
       line('Business name', b.name),
       line('What I do', b.what),
-      line('Who I help', b.who),
-      line("What they're struggling with", b.problem),
-      line('Little moments they live', b.moments),
-      line('What changes for them after they work with me or buy from me', b.change),
-      line('Why I started', b.story),
-      line('Proof I can share', b.proof),
       '',
-      'MY OFFERS',
-      offers.join('\n\n'),
-      com ? '\n' + com : '',
+      offers.length ? 'MY OFFERS\n' + offers.join('\n\n') : null,
+      com ? '\n' + com : null,
       '',
-      'MY VOICE',
       line('How I sound', b.vibe.join(', ')),
-      line('Words and phrases I use', b.words),
-      line('Words to avoid', b.avoid),
       line('Colors and style for my images', b.look),
-      voiceBlock(),
-      design.length ? '\nMY HUMAN DESIGN\n' + design.join('\n') : '',
+      voice.length ? '\nLEARN MY VOICE\n' + voice.join('\n\n') : null,
       '',
-      'MY WEEK (' + posts.length + ' posts)',
-      anyGV ? "I share each post in She Promotes™ and in other promo groups. A lot of the same people are in these groups, so after each main post you'll write a new title and opening for each other group I share it in that day. She Promotes™ always gets the main post." : 'I share each post in She Promotes™, so each post has to work in any promo group.',
-      posts.join('\n'),
-      anyGV ? '\nMY PROMO GROUPS (what each one is about, so you can shape its opening)\n' + groupInfo.join('\n') : '',
+      'MY SOULMATE CLIENT',
+      sheet ? 'This is my Client Mirror Sheet. Read it before you write anything, and pull my buyer\'s real moments and exact words from it.\n\n' + so.sheet.trim()
+        : "My Client Mirror Sheet is in this Project's files. Read it before you write anything, and pull my buyer's real moments and exact words from it. If you can't find it, ask me 5 quick questions about my buyer, one at a time, before you write the first post.",
+      designBlock(),
+      lensBlock(),
+      '',
+      'WHERE I POST',
+      'She Promotes™' + (groups.length ? ', ' + groups.join(', ') : '') + '. A lot of the same people are in these groups, so I share different versions of a post in different places.',
+      '',
+      'EVERY WEEK',
+      'When I say "Let\'s write my promos" or anything like it, ask me these in one short message, then wait for my answers:',
+      '1. Which offers, or which thing inside your community, do you want to promote this week?',
+      '2. How many posts do you need?',
+      '3. What feel do you want? Warm, Fun, Funny, Playful, Heartfelt, Bold and direct, Calm or Inspiring. Pick any that fit.',
+      '4. Anything happening this week? A launch, a deadline, an event or a price change.',
+      'Then show me a short plan: each post\'s hook title, its lens, and one line on what it\'s about. Ask if I want to switch any. When I say it\'s good, write Post 1 only. After each post, ask me: "Want to go deeper, or is this good?" When I say it\'s good, ask me: "Want another version of this post for a different group?" If I say yes, write it with a different lens, a new title and a new opening, and ask me again after it. If I say no, write the next post.',
+      '',
+      'FOR EACH POST, GIVE ME THREE THINGS, EACH IN ITS OWN CODE BLOCK SO I CAN COPY IT IN ONE TAP',
+      '- TITLE',
+      '- POST',
+      '- IMAGE PROMPT',
+      'For another version, write a new title and a new opening for the same post and keep the rest the same. Someone in several groups should never see the same title or first line twice.',
+      '',
+      'HOW TO SELL LIKE ME (THE PSYCHOLOGY OF WHY PEOPLE BUY)',
+      '- People buy the feeling first, then explain it to themselves with facts. Lead with what the moment feels like. The details come second.',
+      "- They buy when they think \"that's me.\" Open with a moment so specific they can see it: the time, the place, the one detail only my buyer would recognize.",
+      '- Say the voice in their head, in their words. Use the voice from the post\'s lens and my Client Mirror Sheet.',
+      "- In one line, show I understand what they've already tried.",
+      '- Paint what could be with small, real details they can picture.',
+      '- Bring in the offer, and tie each piece to how it helps them.',
+      '- End with an invitation in this shape: "If you\'re tired of [what they\'re tired of] and ready for [what could be], then come join us." Then add my link. If the offer isn\'t a community, swap "come join us" for the natural next step, like "grab yours" or "book your spot."',
+      "- The test: before you give me a post, check the first line. Could it be in anyone else's post? If yes, zoom in until the answer is no.",
+      '- No pressure, no countdowns, no fake urgency, and never "DM me."',
+      b.community.name.trim() ? '- When a post promotes my community, sell the one specific thing inside it, not the community or its features. Say what it is and how it helps, in simple words, since they may never have heard of it.' : null,
+      hasPay ? "- For an Affiliate Product, it's something I recommend, not something I made. Share why I personally love it and who it's for, and be honest that it's my affiliate link." : null,
       '',
       'HOW TO SOUND LIKE ME',
       '- Write like I am talking to one person, my soulmate client, as a friend. Like a voice note, not an ad.',
       '- Simple, everyday words. Short sentences. One idea per sentence. Contractions. If a word sounds like marketing, use the plain word instead.',
-      '- Use micro-specific moments from my soulmate client\'s real life. Small, real scenes they would recognize right away. Not "you feel stuck" but "you rewrote your bio three times this week and still hit delete." Not "you\'re overwhelmed" but "you have 14 tabs open and none of them is the thing you meant to do."',
-      '- Use a different micro-moment in every post.',
-      '- It should read like I wrote it on my phone. Not polished, not perfect, not salesy.',
-      '- Sound human. Never use these: "Imagine...", "Picture this", "Here\'s the thing", "The truth is", "Let\'s be honest", "Let that sink in", "game-changer", "unlock", "unleash", "elevate", "embrace", "journey", "transform", "empower", "dive in", "in today\'s world", "it\'s not about X, it\'s about Y", "you\'re not X, you\'re Y". No lists of three used for rhythm. No colon in the middle of sentences for drama.',
+      '- A different micro-moment in every post.',
+      '- Sound human. Never use these: "Imagine...", "Picture this", "Here\'s the thing", "The truth is", "Let\'s be honest", "game-changer", "unlock", "unleash", "elevate", "embrace", "journey", "transform", "empower", "dive in", "in today\'s world", "it\'s not about X, it\'s about Y", "you\'re not X, you\'re Y". No lists of three used for rhythm.',
       '- No coach jargon: high-vibe, aligned action, level up, scale, 6 figures, abundance mindset.',
       '- No em dashes or en dashes anywhere. Use a period or a comma.',
       "- Don't assume my buyers are women. Use they or you.",
-      '',
-      'HOW TO WRITE EACH POST',
-      '- One offer per post. Only promote what that post says it promotes.',
-      b.community.name.trim() ? '- When a post promotes my community, sell the one specific thing inside it, not the community or its features. People join for one thing they want right now. Say what it is and how it helps them in simple words, since they may never have heard of it. Lead with the result it gives them, and make the community simply where it lives. Invite them to come do that one thing.' : null,
-      '- Every post starts with a hook title. Skool shows the title first, so it decides whether they stop scrolling. Under 70 characters. Speak to them, not about me. A question they would answer yes to, a moment they know, or a surprising truth. One emoji is fine. Nothing the post does not deliver.',
-      "- The first paragraph reels them in with a micro-moment. One or two short sentences that make them think 'wait, that's me.' Never open with my name, 'I offer' or 'I'm excited to announce.'",
-      "- Then who it's for, what the offer is, what changes for them, and one clear invitation with the link if I gave one.",
-      '- Every post has two parts. The OPENING is the first paragraph that reels them in. The BODY is everything after it. Write the BODY so it reads naturally after any opening, and never refer back to words in the opening.',
-      '- Every post gets a different angle and a different first line.',
-      "- Don't mention a specific group or promo day in the post, since I'll share it in several places.",
-      '- Use what my Human Design says about how I promote, my call to action style, my throat voice and my open centers.',
-      '- 80 to 180 words.',
-      '- Skool formatting: no markdown, no asterisks, no hashtags in the main post. Skool drops markdown when I paste, so style it with characters that paste as they are.',
-      '- Style every post so it pops and is easy to skim on a phone:',
-      '   - Bold with Unicode bold letters, like 𝗧𝗵𝗶𝘀 𝗶𝘀 𝗯𝗼𝗹𝗱 and 𝟮𝟭 for numbers. Bold the offer name, short labels, the one line I want them to remember, and the call to action. Three to five bold spots per post. Never bold a whole paragraph.',
-      '   - CAPITAL LETTERS on one or two words that need punch, like FREE, NOW or the name of a challenge. Never a whole sentence.',
-      '   - Emojis that match the feeling of the post, four to seven per post. Put them at the start of a short line, at the end of a sentence, or as bullets. Never several in a row.',
-      '   - Bullets with ✦ or an emoji, and short lines with space between them.',
-      '   - Use the same styling in the group openings and the Instagram and Facebook versions. Keep the TikTok script plain, since I say it out loud.',
-      '   - Keep the title plain text. Skool already makes it bold. One emoji or one word in capitals is fine there.',
-      "- No recruiting or MLM language. Don't ask people to DM me. Invite them to comment instead.",
-      b.offers.some(function (o) { return o.format === 'Affiliate Product' && o.name.trim(); }) ? "- For an Affiliate Product, it's something I recommend, not something I made. Share why I personally love it and who it's for, and be honest that it's my affiliate link." : null,
+      "- Don't mention a specific group or promo day in the post.",
+      '- Use what my Human Design says about how I promote, my call to action style and my throat voice.',
+      '- 80 to 200 words.',
       b.you.trim() ? '- End with my name, ' + b.you.trim() + ', on its own line.' : null,
       '',
-      'FOR EACH POST, ALSO WRITE AN IMAGE PROMPT FOR A PROMO BANNER',
-      'The image is a banner that sells the offer in that post. I will paste each image prompt into ChatGPT. Every image prompt must:',
-      '- Start with this line: "Before you make this, ask me if I want to add a photo of myself or my product. If I upload one, use it as the main photo."',
-      '- Put the offer name on the banner as the headline, spelled exactly. Under it, one short line with the result they get, 8 words or fewer. If the post promotes something inside my community, the headline is the name of that thing and my community name goes small underneath. Spell out every word that goes on the image, and nothing else goes on it.',
-      '- Be square 1:1' + (plats.some(function (x) { return x.id === 'instagram'; }) ? ', with the important parts centered so it also crops to 4:5 for Instagram' : '') + '.',
-      '- Look like a real promo banner a designer made for a small business. Clean layout, lots of breathing room, big easy-to-read text on a phone. Use real-looking photography of a person, a real setting, or what the offer actually is.',
-      '- Use my colors and style.' + (b.look.trim() ? ' My colors and style: ' + b.look.trim() + '.' : ' Pick simple, warm colors that fit my business.') + ' Name the fonts by style, like an elegant serif headline and a clean sans serif line.',
-      '- Never look AI-made: no glowing sparkles, no sacred geometry, no galaxy or cosmic backgrounds, no floating objects, no fantasy lighting, no extra words, no misspelled text, no logos.',
-      '- Be short enough to paste in one go.',
-      platformBlock(plats),
-      anyGV ? [
-        '',
-        'GROUP VERSIONS (after each main post is approved)',
-        'For every group listed under that post, except She Promotes™, write a new title and a new opening. The BODY stays exactly the same, so I only need the title and opening for each group.',
-        "- Shape each one to what that group is about, using MY PROMO GROUPS above. Think about who's in that room and what they're going through.",
-        "- The opening starts with a question about a small, real moment that group's people live. Then answer it with a short, real experience from my work or my clients' lives, two or three sentences. Never make up results, numbers or stories I didn't give you. If you need a detail, ask me.",
-        '- The opening leads straight into the BODY, so the whole post reads as one.',
-        '- Titles under 70 characters. Every title and every first line is different from the main post and from every other group, so someone in several groups never sees the same thing twice.',
-        "- Same writing rules as the main post. Don't name the group in the post."
-      ].join('\n') : null,
+      'HOW TO STYLE IT',
+      '- Skool drops markdown when I paste, so no asterisks, no # and no hashtags in the post.',
+      '- Bold with Unicode bold letters, like 𝗧𝗵𝗶𝘀. Bold the offer name, short labels, the one line I want them to remember, and the call to action. Three to five bold spots. Never a whole paragraph.',
+      '- CAPITAL LETTERS on one or two words that need punch. Never a whole sentence.',
+      '- Four to seven emojis that match the feel of the post, at the start of a short line, at the end of a sentence, or as bullets. Never several in a row.',
+      '- Bullets with ✦ or an emoji, and short lines with space between them.',
+      '- The title is plain text under 70 characters. One emoji or one word in capitals is fine there.',
       '',
-      'HOW WE WILL WORK TOGETHER (one step at a time, wait for me after each step)',
-      "Step 1. Show me 8 to 10 micro-moments you think my soulmate client lives, based on everything above, so I can correct them. Then show me the plan for all " + posts.length + " posts as a simple list: the day, what it promotes, the hook title, and one line on what the post is about. Ask me if these are the posts I want, or if I want to switch any of them out. Wait for my answer. Don't write the posts yet.",
-      "Step 2. When I say the plan is good, write Post 1 only, in full: the title, the post" + (plats.length ? ', the ' + plats.map(function (x) { return x.label; }).join(', ') + ' version' + (plats.length > 1 ? 's' : '') : '') + " and the image prompt. Ask me if I want any changes. When I say it's good, " + (anyGV ? 'write the group versions for Post 1 all at once: the title and opening for each group listed under it. I approve them together or ask for tweaks. Then write Post 2. Skip group versions for posts that have none.' : 'write Post 2.') + " Keep going one post at a time until all " + posts.length + " are done. Don't use a code block in this step.",
-      "Step 3. After the last post, ask me: \"Are you ready for your copy block?\" When I say yes, give me every final post inside ONE code block so I can copy it in one tap. Inside the code block, use these labels on their own lines and nothing else:",
+      'HOW TO WRITE THE IMAGE PROMPT',
+      "It's for a promo banner I'll make in ChatGPT. It must:",
+      '- Start with: "Before you make this, ask me if I want to add a photo of myself or my product. If I upload one, use it as the main photo."',
+      '- Put the offer name on the banner as the headline, spelled exactly, with one short line under it about the result, 8 words or fewer. Spell out every word that goes on the image, and nothing else goes on it.',
+      '- Be square, with the important parts centered so it also crops to 4:5.',
+      '- Look like a real promo banner a designer made for a small business. Clean, lots of breathing room, big easy-to-read text. Real-looking photography.',
+      '- Use my colors and style.' + (b.look.trim() ? ' ' + b.look.trim() : ''),
+      '- Never look AI-made: no glowing sparkles, no sacred geometry, no cosmic backgrounds, no floating objects, no extra words, no logos.',
       '',
-      'TITLE 1',
-      '(the hook title)',
-      'OPENING 1',
-      '(the paragraph that reels them in)',
-      'BODY 1',
-      '(the rest of the post)',
-      'IMAGE 1',
-      '(the image prompt)',
-      plats.map(function (x) { return x.id.toUpperCase() + ' 1\n(the ' + x.label + ' version)'; }).join('\n') || null,
-      anyGV ? 'GROUP TITLE 1: (group name, written exactly as in my list)\n(that group\'s title)\nGROUP OPENING 1: (the same group name)\n(that group\'s opening)\n(then the next group for Post 1, and so on)' : null,
-      'TITLE 2',
-      '(the hook title)',
-      'OPENING 2',
-      '(the opening)',
-      'BODY 2',
-      '(the rest of the post)',
-      'IMAGE 2',
-      '(the image prompt)',
-      '',
-      "Include all " + posts.length + " posts in order, exactly as I approved them. Don't repeat the title inside the post." + (plats.length ? ' Leave out the platform versions for posts marked Skool only.' : '') + (anyGV ? ' Include the group title and opening for every group listed under each post, labeled with the post number and the group name. Never write a group version for She Promotes™.' : ''),
-      '',
-      'Step 4. Right after the code block, give me these instructions, in simple words:',
-      '1. Tap the copy button on the code block.',
-      '2. Go back to your Promo Planner, open Write my promos, paste it into the Paste your posts box and tap Add to my week.',
-      '3. In Make your images, right below it, copy each image prompt, make the image in ChatGPT, download it, and tap + Add image to upload it.',
-      '4. Every day, open that day in My promo week. Tap each group, copy its title and post, tap Open to go post it, then tap the circle next to the group to mark it posted.' + (plats.length ? ' Copy your ' + plats.map(function (x) { return x.label; }).join(', ') + ' version' + (plats.length > 1 ? 's' : '') + ' too.' : '') + ' Mark the day complete when you\'re done.',
-      'Then end with three short tips for showing up this week the way my design works best.',
-      '',
-      'Start with Step 1 now.'
+      'Start by saying hi and asking me the four questions for this week.'
     ]).replace(/\n{3,}/g, '\n\n');
   }
 
-  /* ---------- reading Claude's reply ---------- */
-  function parseReply(text) {
-    var lines = text.replace(/\r\n?/g, '\n').split('\n');
-    var out = {}, cur = null, kind = null, buf = [], gname = '';
-    function flush() {
-      if (cur == null) return;
-      var body = buf.join('\n').replace(/^\s*\n+/, '').replace(/\s+$/, '');
-      if (!out[cur]) out[cur] = { title: '', text: '', img: '', ig: '', fb: '', tt: '', opening: '', body: '', groups: {} };
-      if (kind === 'gtitle' || kind === 'gopening') {
-        var gk = normName(gname); if (!gk) return;
-        if (!out[cur].groups[gk]) out[cur].groups[gk] = { name: gname, title: '', opening: '' };
-        if (kind === 'gtitle') out[cur].groups[gk].title = body.replace(/\s*\n\s*/g, ' ').replace(/^["\u201c]+|["\u201d]+$/g, '');
-        else out[cur].groups[gk].opening = body;
-        return;
-      }
-      if (kind === 'post') out[cur].text = body;
-      else if (kind === 'opening' || kind === 'body') out[cur][kind] = body;
-      else if (kind === 'ig' || kind === 'fb' || kind === 'tt') out[cur][kind] = body;
-      else if (kind === 'title') out[cur].title = body.replace(/\s*\n\s*/g, ' ').replace(/^["\u201c]+|["\u201d]+$/g, '');
-      else out[cur].img = body;
-    }
-    lines.forEach(function (raw) {
-      var ln = raw.replace(/^[\s#*>_]+/, '').replace(/[\s*_:]+$/, '');
-      if (/^```/.test(raw.trim())) return;
-      var g = /^GROUP\s+(TITLE|OPENING)\s*(\d{1,2})\s*[:.)|\-]?\s*(.+)$/i.exec(ln);
-      if (g) { flush(); cur = Number(g[2]); buf = []; kind = g[1].toLowerCase() === 'title' ? 'gtitle' : 'gopening'; gname = g[3].replace(/^[\s(\[]+|[\s)\]]+$/g, '').trim(); return; }
-      var m = /^(TITLE|POST|OPENING|BODY|IMAGE(?: PROMPT)?|INSTAGRAM|FACEBOOK|TIK ?TOK)\s*(\d{1,2})\b(?:\s*[:.)\-|].*)?$/i.exec(ln);
-      if (m) {
-        flush(); cur = Number(m[2]); buf = [];
-        var lab = m[1].toLowerCase().replace(' ', '');
-        kind = lab === 'post' ? 'post' : lab === 'title' ? 'title' : lab === 'opening' ? 'opening' : lab === 'body' ? 'body' : lab === 'instagram' ? 'ig' : lab === 'facebook' ? 'fb' : lab === 'tiktok' ? 'tt' : 'img';
-        return;
-      }
-      if (cur != null) buf.push(raw);
-    });
-    flush();
-    Object.keys(out).forEach(function (n) {
-      var o = out[n];
-      if (!o.text && (o.opening || o.body)) o.text = [o.opening, o.body].filter(Boolean).join('\n\n');
-    });
-    return out;
-  }
-
   /* ---------- write my promos ---------- */
-  var CLAUDE_URL = 'https://claude.ai/new';
-  var DRAFT_KEY = 'shePromotesPromoPlannerDraft', applyMsg = null, draftT;
-  var draftReply = '';
-  try { draftReply = window.localStorage.getItem(DRAFT_KEY) || ''; } catch (e) { draftReply = ''; }
-  function saveDraft() { try { if (draftReply) window.localStorage.setItem(DRAFT_KEY, draftReply); else window.localStorage.removeItem(DRAFT_KEY); } catch (e) { /* storage unavailable */ } }
   function renderWrite() {
     var box = $('view'); box.innerHTML = '';
-    var w = state.week;
     box.appendChild(el('div', {}, [
-      p('Step 4', 'eyebrow'),
+      p('Every week', 'eyebrow'),
       el('h1', {}, ['Write my ', el('em', { text: 'promos' })]),
-      p('Plan your week, copy one prompt into Claude or ChatGPT, then paste the posts back here. They land in My promo week, one per day, each with an image prompt.', 'lede')
+      p('Set up your promo prompt once. Then each week, open it in Claude or ChatGPT, answer a few questions, and your posts get written in your voice.', 'lede')
     ]));
 
     var missing = [];
@@ -3227,182 +3181,46 @@
       ]));
     }
 
-    /* 1. plan */
-    box.appendChild(weekSetupCard());
-
-    /* plan preview with picks */
-    var plan = planList();
-    var listWrap = el('div', {});
-    plan.forEach(function (it) {
-      var sel = el('select', { class: 'select', 'aria-label': 'What this post promotes' }, offerChoices().map(function (c) {
-        var o = el('option', { value: c.id, text: c.label }); if (c.id === it.pick) o.selected = true; return o;
-      }));
-      sel.addEventListener('change', function () { slotData(it.sl.key).offer = sel.value; save(); renderKeep(); });
-      var drawSel = null;
-      if (it.pick === 'c') {
-        var dl = drawList();
-        drawSel = el('select', { class: 'select', 'aria-label': 'Which thing inside your community', style: 'margin-top:8px' },
-          dl.map(function (x) { var o = el('option', { value: x, text: 'Inside: ' + x }); if (x === it.draw) o.selected = true; return o; })
-            .concat([(function () { var o = el('option', { value: 'any', text: dl.length ? 'Let Claude pick from my list' : 'Let Claude pick one thing inside' }); if (it.draw === 'any') o.selected = true; return o; })()]));
-        drawSel.addEventListener('change', function () { slotData(it.sl.key).draw = drawSel.value; save(); });
-      }
-      listWrap.appendChild(el('div', { class: 'sub' }, [
-        el('div', { class: 't', text: DAYS[it.day] + ', ' + fmtDate(weekDate(it.day)) }),
-        p((it.sl.second ? 'Second post. ' : '') + 'Share in: ' + shareText(it.sl, it.day), 'hint'),
-        sel,
-        drawSel,
-        it.pick === 'c' && !drawList().length ? p("Add the things inside your community in My business so you can choose which one to promote.", 'hint') : null
-      ]));
-    });
-    box.appendChild(el('section', { class: 'card', 'aria-label': 'Your posts this week' }, [
-      el('h3', { text: plan.length + ' posts this week' }),
-      p('Here is what each post promotes. Change any of them before you copy your prompt.', 'hint'),
-      plan.length ? listWrap : p('No posts on your plan yet. Untap a day off or add a promo group.', 'hint')
-    ]));
-
-    /* 2. prompt */
-    var promptBox = el('textarea', { class: 'textarea', rows: 8, readonly: true, 'aria-label': 'Your prompt' });
+    var promptBox = el('textarea', { class: 'textarea', rows: 8, readonly: true, 'aria-label': 'Your promo prompt' });
     promptBox.value = buildPrompt();
-    var peek = el('details', { class: 'day' }, [
-      el('summary', {}, [el('span', { class: 'chev', 'aria-hidden': 'true', text: '›' }), el('span', { class: 'ddate', text: 'Peek at your prompt' })]),
-      el('div', { class: 'day-body' }, [promptBox])
-    ]);
-    box.appendChild(el('section', { class: 'card', 'aria-label': 'Copy your prompt' }, [
-      el('h3', { text: 'Step 1: Copy your prompt' }),
-      p("Your design, your business and your plan are all in it. Copy it, open Claude or ChatGPT, paste it in and send.", 'hint'),
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Set up once: your promo prompt' }, [
+      el('h3', { text: 'Set up once: your promo prompt' }),
+      p('Your design, your business, your soulmate client and how to sell like you are all in it.', 'hint'),
+      el('ol', { class: 'steps' }, [
+        el('li', {}, [el('span', { class: 'st', text: 'Copy your prompt' }), 'Tap the button below.']),
+        el('li', {}, [el('span', { class: 'st', text: 'Make a Project' }), 'In Claude or ChatGPT, start a new Project and call it My Promos. Paste your prompt into the Project instructions.']),
+        el('li', {}, [el('span', { class: 'st', text: 'Add your soulmate client' }), 'Upload your Client Mirror Sheet to the Project files too.'])
+      ]),
       el('div', { class: 'actions' }, [
-        el('button', { type: 'button', class: 'btn main', text: 'Copy my prompt', onclick: function () {
+        el('button', { type: 'button', class: 'btn main', text: 'Copy my promo prompt', onclick: function () {
           if (missing.length) { toast('Add ' + missing[0].t + ' first.'); return; }
-          if (!plan.length) { toast('Add at least one post to your plan.'); return; }
           promptBox.value = buildPrompt();
-          copyText(promptBox.value, 'Prompt copied. Paste it into Claude or ChatGPT.');
+          copyText(promptBox.value, 'Copied. Paste it into your Project instructions.');
         } }),
         el('a', { class: 'btn', href: CLAUDE_URL, target: '_blank', rel: 'noopener noreferrer', text: 'Open Claude' }),
         el('a', { class: 'btn', href: 'https://chatgpt.com/', target: '_blank', rel: 'noopener noreferrer', text: 'Open ChatGPT' })
       ]),
-      peek,
+      el('details', { class: 'day' }, [
+        el('summary', {}, [el('span', { class: 'chev', 'aria-hidden': 'true', text: '›' }), el('span', { class: 'ddate', text: 'Peek at your prompt' })]),
+        el('div', { class: 'day-body' }, [promptBox])
+      ]),
+      p('Changed your offers, your groups or your soulmate client? Copy your prompt again and replace the old one. No Projects? Paste it at the start of a new chat each week.', 'hint')
+    ]));
+
+    box.appendChild(weekSetupCard());
+
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Every week' }, [
+      el('h3', { text: 'Every week' }),
       el('ol', { class: 'steps' }, [
-        el('li', {}, [el('span', { class: 'st', text: 'Check your plan' }), "It shows the little moments it thinks your soulmate client lives, then a list of your posts with titles and one line each. Fix the moments and switch out any post you don't love."]),
-        el('li', {}, [el('span', { class: 'st', text: 'One post at a time' }), "It writes Post 1. Ask for changes until it sounds like you, then say next. Tap Speak in the chat if you'd rather talk."]),
-        el('li', {}, [el('span', { class: 'st', text: 'Get your copy block' }), 'After the last post it asks if you are ready. Say yes, tap copy on the block, and paste it below.']),
-        el('li', {}, [el('span', { class: 'st', text: 'Make your images' }), 'Right below, copy each image prompt into ChatGPT, download the image, and upload it here.'])
-      ])
+        el('li', {}, [el('span', { class: 'st', text: 'Start a chat in your Project' }), 'Say "Let\'s write my promos."']),
+        el('li', {}, [el('span', { class: 'st', text: 'Answer its questions' }), 'Which offers you want to promote, how many posts, the feel you want, and anything happening this week.']),
+        el('li', {}, [el('span', { class: 'st', text: 'One post at a time' }), 'It writes each post with a title and an image prompt. Ask for changes until it sounds like you. Posting it in another group? Ask for another version.']),
+        el('li', {}, [el('span', { class: 'st', text: 'Make your image' }), 'Paste the image prompt into ChatGPT and download your banner.']),
+        el('li', {}, [el('span', { class: 'st', text: 'Add it to your day' }), 'Open the day in My promo week. Paste your title and post, add each version in its own tab, and upload your image.'])
+      ]),
+      el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Go to my promo week', onclick: function () { setView('week'); } })])
     ]));
-
-    /* 3. paste back */
-    var reply = el('textarea', { class: 'textarea post', placeholder: 'Paste everything from the code block here. Tap the copy button on the code block to grab it all at once.', 'aria-label': "Claude's reply" });
-    reply.value = draftReply;
-    reply.addEventListener('input', function () { draftReply = reply.value; clearTimeout(draftT); draftT = setTimeout(saveDraft, 300); });
-    var result = el('div', {});
-    if (applyMsg) {
-      result.appendChild(el('div', { class: 'callout' }, [
-        el('strong', { text: applyMsg.added ? 'Added ' + applyMsg.added + ' post' + (applyMsg.added === 1 ? '' : 's') + ' and ' + applyMsg.imgs + ' image prompt' + (applyMsg.imgs === 1 ? '' : 's') + '. ' : 'Updated ' + applyMsg.imgs + ' image prompt' + (applyMsg.imgs === 1 ? '' : 's') + '. Your posts stayed the same. ' }),
-        (applyMsg.note ? applyMsg.note.trim() + ' ' : '') + 'Next, make your images below.'
-      ]));
-      applyMsg = null;
-    }
-    var hasWritten = plan.some(function (it) { var s = w.slots[it.sl.key]; return s && s.text.trim(); });
-
-    function apply() {
-      var parsed = parseReply(reply.value);
-      var nums = Object.keys(parsed);
-      if (!nums.length) { toast("I couldn't find POST 1, POST 2 and so on. Paste the whole code block."); return; }
-      var cur = planList(), added = 0, imgs = 0, gvs = 0, missed = [];
-      cur.forEach(function (it, n) {
-        var got = parsed[n + 1]; if (!got) return;
-        var s = slotData(it.sl.key);
-        if (got.text) {
-          s.text = got.text; added++; s.shared = [];
-          s.opening = got.opening || ''; s.body = got.body || '';
-        }
-        var gnames = Object.keys(got.groups || {});
-        if (gnames.length) {
-          s.gv = {};
-          var dayGroups = it.sl.second ? [] : groupsForDay(it.day);
-          gnames.forEach(function (gk) {
-            var gv = got.groups[gk];
-            var match = dayGroups.filter(function (t) { return normName(t.name) === gk; })[0] ||
-              dayGroups.filter(function (t) { var a = normName(t.name); return a && (a.indexOf(gk) > -1 || gk.indexOf(a) > -1); })[0];
-            if (match && (gv.opening || '').trim()) { s.gv[match.id] = { title: gv.title, opening: gv.opening }; gvs++; }
-            else if (missed.indexOf(gv.name) === -1) missed.push(gv.name);
-          });
-        }
-        if (got.title) s.title = got.title;
-        ['ig', 'fb', 'tt'].forEach(function (k) { if (got[k]) s[k] = got[k]; });
-        if (got.img) { s.imgPrompt = got.img; imgs++; }
-        if (!s.offer) s.offer = it.pick;
-      });
-      if (!save()) { toast('Your planner is full. Remove a few images and try again.'); return; }
-      draftReply = ''; saveDraft();
-      var extra = nums.length > cur.length ? ' The reply had ' + nums.length + ' posts and your plan has ' + cur.length + ', so the extras were left out.' : '';
-      var short = added < cur.length ? ' ' + (cur.length - added) + ' post' + (cur.length - added === 1 ? '' : 's') + ' had nothing to fill. Ask for the rest in the same chat and paste again.' : '';
-      var gnote = gvs ? ' Plus ' + gvs + ' group version' + (gvs === 1 ? '' : 's') + '.' : '';
-      if (missed.length) gnote += " I couldn't match " + missed.join(', ') + ' to a group on that day, so I left it out.';
-      applyMsg = { added: added, imgs: imgs, note: (added ? short + extra : extra) + gnote };
-      renderKeep();
-      toast('Your week is filled in. Now make your images.');
-    }
-    var addBtn = hasWritten
-      ? twoStep('Add to my week', 'Tap again to replace the posts already there', apply, 'main')
-      : el('button', { type: 'button', class: 'btn main', text: 'Add to my week', onclick: apply });
-    if (hasWritten) addBtn.className = 'btn main';
-
-    box.appendChild(el('section', { class: 'card', 'aria-label': "Paste your posts" }, [
-      el('h3', { text: 'Step 2: Paste your posts' }),
-      p("When Claude gives you your copy block, tap copy and paste it here. Each title, post and image prompt goes to the right day automatically.", 'hint'),
-      reply,
-      el('div', { class: 'actions' }, [addBtn]),
-      hasWritten ? p('Some days already have posts. Adding will replace those with the new ones.', 'hint') : null,
-      result
-    ]));
-
-    /* 4. images */
-    var withPrompts = plan.filter(function (it) { var s = w.slots[it.sl.key]; return s && (s.imgPrompt || '').trim(); });
-    if (withPrompts.length) {
-      var made = withPrompts.filter(function (it) { return w.slots[it.sl.key].img; }).length;
-      var rows = withPrompts.map(function (it) {
-        var s = w.slots[it.sl.key];
-        var right = el('div', { class: 'imgcell' });
-        if (s.img) {
-          right.appendChild(el('img', { src: s.img, alt: 'Image for ' + DAYS[it.day] }));
-          right.appendChild(el('button', { type: 'button', class: 'btn small warn', text: 'Remove', onclick: function () { s.img = ''; save(); renderKeep(); } }));
-        } else {
-          var file = el('input', { type: 'file', accept: 'image/*', 'aria-label': 'Add the image for ' + DAYS[it.day] });
-          file.addEventListener('change', function () {
-            compressImage(file.files && file.files[0], function (url) {
-              var prev = s.img; s.img = url;
-              if (!save()) { s.img = prev; toast('Your planner is full. Remove a few images and try again.'); return; }
-              toast('Image added to ' + DAYS[it.day] + '.'); renderKeep();
-            });
-          });
-          right.appendChild(el('span', { class: 'btn small main filebtn' }, ['+ Add image', file]));
-        }
-        return el('div', { class: 'imgrow' }, [
-          el('div', { class: 'imgtext' }, [
-            el('div', { class: 't', text: DAYS[it.day] + (it.sl.second ? ', second post' : '') }),
-            p(s.title || 'Post ' + (it.idx + 1), 'hint'),
-            el('div', { class: 'actions' }, [
-              el('button', { type: 'button', class: 'btn small', text: 'Copy image prompt', onclick: function () { copyText(s.imgPrompt, 'Image prompt copied. Paste it into ChatGPT.'); } })
-            ])
-          ]),
-          right
-        ]);
-      });
-      box.appendChild(el('section', { class: 'card', 'aria-label': 'Make your images' }, [
-        el('h3', { text: 'Step 3: Make your images' }),
-        p(made + ' of ' + withPrompts.length + ' images added', 'lead'),
-        el('ol', { class: 'steps' }, [
-          el('li', {}, [el('span', { class: 'st', text: 'Copy the image prompt' }), 'Tap Copy image prompt on a post. Have a photo of you or your product handy if you want to use one.']),
-          el('li', {}, [el('span', { class: 'st', text: 'Make it in ChatGPT' }), 'Paste it into ChatGPT. It asks if you want to add your photo first. Then download the banner it makes. If the words come out wrong, ask it to fix the spelling.']),
-          el('li', {}, [el('span', { class: 'st', text: 'Upload it here' }), 'Tap + Add image on the same post. It shows up on that day in My promo week.'])
-        ]),
-        el('div', { class: 'actions' }, [el('a', { class: 'btn small', href: 'https://chatgpt.com/', target: '_blank', rel: 'noopener noreferrer', text: 'Open ChatGPT' })]),
-        el('div', {}, rows),
-        made === withPrompts.length ? el('div', { class: 'callout' }, [el('strong', { text: 'All set. ' }), 'Your posts and images are ready to go.', el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main small', text: 'See my promo week', onclick: function () { setView('week'); } })])]) : null
-      ]));
-    }
   }
-
 
   /* ---------- placeholders ---------- */
   function renderSoon(v) {
@@ -3417,6 +3235,7 @@
 
   /* ---------- start ---------- */
   $('backupLink').addEventListener('click', function (e) { e.preventDefault(); setView('start'); setTimeout(function () { var c = document.querySelector('[aria-label="Back up your planner"]'); if (c) c.scrollIntoView({ behavior: 'smooth' }); }, 60); });
+  seedPlaces();
   var valid = VIEWS.map(function (v) { return v.id; });
   if (valid.indexOf(state.view) === -1 && !/^day[0-6]$/.test(state.view) && !/^guide-(voice|gates|profile|clients|every)$/.test(state.view)) state.view = 'start';
   if (!state.design.done && /^guide/.test(state.view)) state.view = 'start';
