@@ -309,6 +309,8 @@
   .placegrid > .card > .actions:last-child { margin-top: auto; padding-top: 12px; }
   .placegrid .inline-acts { display: contents; }
   .placegrid > .homecard { border-color: rgba(214,173,87,.6); }
+  .placegrid > .inlist { border-color: var(--pink); }
+  .listbadge { align-self: flex-start; display: inline-block; background: var(--grad); color: #140d1c; font-weight: 700; font-size: 13px; border-radius: 999px; padding: 4px 12px; margin-bottom: 10px; }
   .placecard .mini { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin: 14px 0 8px; }
   .placegrid > .card { transition: border-color .2s, box-shadow .2s, transform .2s; }
   .placegrid > .card:focus-within { border-color: var(--pink); }
@@ -444,8 +446,9 @@
           if (Array.isArray(sw.platforms)) w0.platforms = sw.platforms.filter(function (x) { return x === 'instagram' || x === 'facebook' || x === 'tiktok'; });
           if (Array.isArray(sw.done)) w0.done = sw.done.filter(function (n) { return typeof n === 'number'; });
           if (Array.isArray(sw.rest)) w0.rest = sw.rest.filter(function (n) { return typeof n === 'number'; });
-          if (Array.isArray(sw.groups)) w0.groups = sw.groups.filter(function (g) { return g && typeof g.id === 'string'; }).map(function (g) { return { id: g.id, name: typeof g.name === 'string' ? g.name : '', url: typeof g.url === 'string' ? g.url : '', rules: typeof g.rules === 'string' ? g.rules : '', days: Array.isArray(g.days) ? g.days.filter(function (n) { return typeof n === 'number'; }) : [], place: typeof g.place === 'string' ? g.place : '' }; });
+          if (Array.isArray(sw.groups)) w0.groups = sw.groups.filter(function (g) { return g && typeof g.id === 'string'; }).map(function (g) { return { id: g.id, name: typeof g.name === 'string' ? g.name : '', url: typeof g.url === 'string' ? g.url : '', rules: typeof g.rules === 'string' ? g.rules : '', days: Array.isArray(g.days) ? g.days.filter(function (n) { return typeof n === 'number'; }) : [], place: typeof g.place === 'string' ? g.place : '', inList: typeof g.inList === 'boolean' ? g.inList : null }; });
           if (sw.daysV2) w0.daysV2 = true;
+          if (sw.listV1) w0.listV1 = true;
           if (Array.isArray(sw.seeded)) w0.seeded = sw.seeded.filter(function (x) { return typeof x === 'string'; });
           if (sw.slots && typeof sw.slots === 'object') Object.keys(sw.slots).forEach(function (k) {
             var x = sw.slots[k]; if (!x || typeof x !== 'object' || k.indexOf('-g') > -1) return;
@@ -2421,7 +2424,7 @@
   function placeByKey(k) { return PLACES.filter(function (pl) { return placeKey(pl) === k; })[0]; }
   function groupFromPlace(pl) {
     var notes = [];
-    return { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), name: pl.name, url: placeKey(pl), rules: notes.join(' '), days: [], place: placeKey(pl) };
+    return { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), name: pl.name, url: placeKey(pl), rules: notes.join(' '), days: [], place: placeKey(pl), inList: false };
   }
   /* Adds any place from Places to promote that this planner hasn't seen yet. Removed groups stay removed. */
   /* Every place from Places to promote is in each member's list. Days decide where it shows. */
@@ -2431,16 +2434,21 @@
       w.groups.forEach(function (g) { if (!g.days.length) g.days = [0, 1, 2, 3, 4, 5, 6]; });
       w.daysV2 = true; changed = true;
     }
+    if (!w.listV1) {
+      w.groups.forEach(function (g) { if (typeof g.inList !== 'boolean') g.inList = g.place ? g.days.length > 0 : true; });
+      w.listV1 = true; changed = true;
+    }
     PLACES.forEach(function (pl) {
       var k = placeKey(pl);
       var all = w.groups.filter(function (g) { return groupKeyMatch(g, pl); });
       if (!all.length) { w.groups.push(groupFromPlace(pl)); changed = true; return; }
-      var keep = all.filter(function (g) { return g.days.length; })[0] || all[0];
+      var keep = all.filter(function (g) { return g.inList; })[0] || all.filter(function (g) { return g.days.length; })[0] || all[0];
       if (keep.place !== k) { keep.place = k; changed = true; }
       all.forEach(function (g) {
         if (g === keep) return;
         g.days.forEach(function (n) { if (keep.days.indexOf(n) === -1) keep.days.push(n); });
         keep.days.sort();
+        if (g.inList) keep.inList = true;
         if (!keep.rules && g.rules) keep.rules = g.rules;
         w.groups.splice(w.groups.indexOf(g), 1); changed = true;
       });
@@ -2474,8 +2482,8 @@
     box.appendChild(el('div', {}, [
       p('Set up once · 3 of 3', 'eyebrow'),
       el('h1', {}, ['Places to ', el('em', { text: 'promote' })]),
-      p('Promo communities where you can share your offer. Tap the days you can post in each one, and it shows up on those day pages with your post ready to copy.', 'lede'),
-      el('div', { class: 'callout' }, [el('strong', { text: 'Set your days to your plan. ' }), "Free and premium members often get different days, so check each group's rules and tap the days that match the plan you joined. Not in a group? Leave its days off and it won't show up."]),
+      p('Promo communities where you can share your offer. Add the ones you belong to to your list, then tap the days you can post. They show up on those day pages with your post ready to copy.', 'lede'),
+      el('div', { class: 'callout' }, [el('strong', { text: 'Set your days to your plan. ' }), "Free and premium members often get different days, so check each group's rules and tap the days that match the plan you joined."]),
       p('Some of these links are my affiliate links. If you join through them, I may earn a commission.', 'where'),
       p(PLACES_NOTE, 'where'),
       el('div', { class: 'actions' }, [
@@ -2519,18 +2527,23 @@
         ])
       ]));
     });
-    PLACES.forEach(function (pl) {
-      var g = w.groups.filter(function (x) { return groupKeyMatch(x, pl); })[0];
-      if (!g) return;
-      grid.appendChild(el('section', { class: 'card placecard', 'aria-label': pl.name }, [
+    var pairs = PLACES.map(function (pl) { return { pl: pl, g: w.groups.filter(function (x) { return groupKeyMatch(x, pl); })[0] }; }).filter(function (x) { return x.g; });
+    pairs.sort(function (a, b) { return (b.g.inList ? 1 : 0) - (a.g.inList ? 1 : 0); });
+    pairs.forEach(function (x) {
+      var pl = x.pl, g = x.g, on = g.inList === true;
+      grid.appendChild(el('section', { class: 'card placecard' + (on ? ' inlist' : ''), 'aria-label': pl.name }, [
+        on ? el('span', { class: 'listbadge', text: '✓ In my list' }) : null,
         el('h3', { text: pl.name }),
         p(pl.what),
         pl.earn ? el('ul', { class: 'stars placelist' }, [el('li', {}, [el('strong', { text: 'Earn: ' }), 'Has an affiliate program.'])]) : null,
-        el('div', { class: 'mini', text: 'Days you can promote here' }),
-        dayPicker(g),
-        p(g.days.length ? 'Shows on your day pages ' + (g.days.length === 7 ? 'every day' : 'on ' + dayNames(g.days)) + '.' : "Not on your day pages yet. Tap your days once you've joined.", 'hint'),
+        on ? el('div', { class: 'mini', text: 'Days you can promote here' }) : null,
+        on ? dayPicker(g) : null,
+        on ? p(g.days.length ? 'Shows on your day pages ' + (g.days.length === 7 ? 'every day' : 'on ' + dayNames(g.days)) + '.' : 'Tap the days you can promote here and it shows on those day pages.', 'hint') : null,
         el('div', { class: 'actions' }, [
-          el('a', { class: 'btn main', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Join ↗' })
+          el('a', { class: on ? 'btn' : 'btn main', href: pl.link, target: '_blank', rel: 'noopener noreferrer', text: 'Join ↗' }),
+          on
+            ? twoStep('Remove from my list', 'Tap again to remove', function () { g.inList = false; save(); renderNav(); renderKeep(); toast('Removed from your list.'); })
+            : el('button', { type: 'button', class: 'btn', text: '+ Add to my list', onclick: function () { g.inList = true; save(); renderNav(); renderPlaces(); toast('Added. Now tap the days you can promote there.'); } })
         ])
       ]));
     });
@@ -2918,7 +2931,7 @@
       var dow = (dt.getDay() + 6) % 7; dt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - dow);
       w.start = ymd(dt); save(); renderNav(); renderKeep();
     });
-    var names = w.groups.filter(function (g) { return g.days.length; }).map(function (g) { return g.name.trim(); }).filter(Boolean);
+    var names = w.groups.filter(groupActive).map(function (g) { return g.name.trim(); }).filter(Boolean);
     return el('section', { class: 'card', 'aria-label': 'Your week' }, [
       el('h3', { text: 'Your week' }),
       el('div', { class: 'field' }, [el('label', { for: dateId, text: 'Week of' }), p('Pick any day and it moves to that Monday.', 'help'), dateInput]),
@@ -2932,8 +2945,9 @@
 
   var openGroups = [];
   var SHE_PROMOTES_URL = 'https://www.skool.com/she-promotes-7924';
+  function groupActive(g) { return (!g.place || g.inList === true) && g.days.length > 0; }
   function groupsForDay(i) {
-    return state.week.groups.filter(function (g) { return g.days.indexOf(i) > -1; }).map(function (g) { return { id: g.id, name: g.name.trim() || 'Another promo group', url: /^https?:\/\//i.test(g.url || '') ? g.url : '', rules: (g.rules || '').trim(), days: g.days.slice(), place: g.place || '' }; });
+    return state.week.groups.filter(function (g) { return groupActive(g) && g.days.indexOf(i) > -1; }).map(function (g) { return { id: g.id, name: g.name.trim() || 'Another promo group', url: /^https?:\/\//i.test(g.url || '') ? g.url : '', rules: (g.rules || '').trim(), days: g.days.slice(), place: g.place || '' }; });
   }
   function shareTargets(day) {
     var sp = { id: 'sp', name: 'She Promotes™', url: SHE_PROMOTES_URL, rules: 'Premium members post twice a day, one for your community and one for an offer. Post in the 💖 Premium Promo (Daily) category.' };
@@ -3070,7 +3084,7 @@
     var voice = [];
     if (b.website.trim()) voice.push('Before you write, open my website and read it to pick up my voice and how I talk about my work: ' + b.website.trim() + ". If you can't open it, use what's below.");
     if (b.about.trim()) voice.push('MY ABOUT TEXT\n' + b.about.trim());
-    var groups = state.week.groups.filter(function (g) { return g.days.length; }).map(function (g) { return g.name.trim(); }).filter(Boolean);
+    var groups = state.week.groups.filter(groupActive).map(function (g) { return g.name.trim(); }).filter(Boolean);
     var sheet = so.include !== false && so.sheet.trim();
     var hasPay = b.offers.some(function (o) { return o.format === 'Affiliate Product' && o.name.trim(); });
 
