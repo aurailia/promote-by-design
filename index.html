@@ -1,4 +1,3 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -452,7 +451,7 @@
     if (dow > 2) mon = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 7);
     return ymd(mon);
   }
-  var state = { view: 'start', design: { type: '', authority: '', profile: '', open: [], channels: [], motors: [], gates: [], done: false }, business: blankBusiness(), soul: { help: '', called: '', story: '', sources: '', sheet: '', include: true }, week: blankWeek(), results: { stats: [], dismissed: [], current: blankResults(), history: [] }, library: [], archive: [] };
+  var state = { view: 'start', design: { type: '', authority: '', profile: '', open: [], channels: [], motors: [], gates: [], done: false }, business: blankBusiness(), soul: { help: '', called: '', story: '', sources: '', sheet: '', include: true, mode: 'here', now: '', night: '', voice: '', tried: '', cost: '', want: '', hesitate: '', words: '' }, week: blankWeek(), results: { stats: [], dismissed: [], current: blankResults(), history: [] }, library: [], archive: [] };
   try {
     var raw = window.localStorage.getItem(KEY);
     if (raw) {
@@ -473,7 +472,7 @@
           if (sb.community && typeof sb.community === 'object') ['name', 'link', 'what', 'draws'].forEach(function (k) { if (typeof sb.community[k] === 'string') b0.community[k] = sb.community[k]; });
         }
         if (saved.soul && typeof saved.soul === 'object') {
-          ['help', 'called', 'story', 'sources', 'sheet'].forEach(function (k) { if (typeof saved.soul[k] === 'string') state.soul[k] = saved.soul[k]; });
+          ['help', 'called', 'story', 'sources', 'sheet', 'mode', 'now', 'night', 'voice', 'tried', 'cost', 'want', 'hesitate', 'words'].forEach(function (k) { if (typeof saved.soul[k] === 'string') state.soul[k] = saved.soul[k]; });
           state.soul.include = saved.soul.include !== false;
         }
         if (saved.week && typeof saved.week === 'object') {
@@ -3094,10 +3093,10 @@
       hd.push('My open centers:');
       open.forEach(function (c) { var O = CENTER_DEEP[c.id].open; hd.push('- ' + c.label + ': ' + O.takeIn.replace(/^With an open [^,]+, /, '') + ' It draws ' + O.draws.charAt(0).toLowerCase() + O.draws.slice(1)); });
       hd.push('In Human Design, my open centers are where I take in and feel other people\'s energy. They are often where I have lived what my soulmate client is living, so they show where I mirror them.');
-    } else hd.push("I haven't added my open centers yet. Ask me which centers are white on my chart before you write the WHERE I MIRROR THEM section.");
+    } else hd.push("I haven't added my open centers yet. Ask me which centers are white on my chart before you write the WHERE YOU MIRROR THEM section.");
     function ans(v) { return (v || '').trim() || '(not answered)'; }
     return [
-      "I want you to build a Client Mirror Sheet for my business. It's a reference sheet about my soulmate client that I'll use every time I write a promo post, so it needs their real moments and their exact words. It also uses my Human Design to show where I mirror them.",
+      "I want you to build my Soulmate Client Mirror Sheet. It's a file I'll add to my Claude or ChatGPT Project, so every time you help me write content, you know my soulmate client's real moments and their exact words. It also uses my Human Design to show where I mirror them.",
       '',
       'ABOUT ME',
       '1. What I help people with:',
@@ -3116,6 +3115,9 @@
       "Read everything I've uploaded first. Look for patterns across my clients, and pull out micro specific details: times of day, places, things they did, things they said. Use their exact words wherever you can.",
       "If I didn't upload anything, don't guess. Ask me 5 questions about my clients first, one at a time, and build the sheet from my answers.",
       '',
+      'Start the file with this note, exactly as written:',
+      '"' + mirrorNote() + '"',
+      '',
       'Organize it into these sections:',
       'WHO THEY ARE: a short snapshot of their life right now.',
       "THE MIDDLE OF THE NIGHT: what they're scrolling, searching, and lying awake thinking about.",
@@ -3125,7 +3127,7 @@
       "WHAT THEY REALLY WANT: the big desire, plus the first small win they'd notice.",
       'WHAT MAKES THEM HESITATE: the worries that stop them from buying.',
       'THEIR EXACT WORDS: a bank of 10 to 15 real phrases from what I shared.',
-      "WHERE I MIRROR THEM: how their struggles connect to my open centers and my story. Where I've felt what they feel, and what I know because of it.",
+      "WHERE YOU MIRROR THEM: written straight to me as \"you.\" How their struggles connect to my open centers and my story. Where I've felt what they feel, and what I know because of it.",
       'READY TO USE HOOKS: 5 opening lines for promos, each one built from a real moment above.',
       '',
       'RULES',
@@ -3133,8 +3135,61 @@
       "- Only use what I gave you. Don't invent details, results, or quotes.",
       '- Keep it simple and easy to scan. Short lines. CAPITAL LETTER headings. No em dashes, no markdown symbols.',
       '- Use "they" for my client unless I say otherwise.',
-      '- When you\'re done, ask me: "Want to go deeper, or is this good?" When I say it\'s good, give it to me as a downloadable file called "Soulmate Client Mirror Sheet" so I can add it to my Project files.'
+      '- When you\'re done, ask me: "Want to go deeper, or is this good?" When I say it\'s good, give it to me as a downloadable file called "Soulmate Client Mirror Sheet' + (bpName() ? ' ' + bpName() : '') + '" so I can add it to my Project files.'
     ].join('\n');
+  }
+  function mirrorNote() {
+    var n = bpName();
+    return 'A note for any AI reading this file: this is ' + (n ? n + "'s" : 'my') + ' Soulmate Client Mirror Sheet. "They" means ' + (n ? 'her' : 'my') + ' soulmate client. "You" means ' + (n || 'me, the business owner') + '. Use it with ' + (n ? 'her' : 'my') + ' HD Blueprint Profile every time you help ' + (n ? 'her' : 'me') + ' write content.';
+  }
+  var SOUL_QS = [
+    { k: 'now', head: 'WHO THEY ARE', label: 'Who are they right now?', help: 'A quick snapshot of their life. Their work, their days, where they are stuck.', ex: 'They own a small gift shop. They opened it five years ago, they love it, and they still do their books on Sunday nights at the kitchen table.' },
+    { k: 'night', head: 'THE MIDDLE OF THE NIGHT', label: "When it's late and they can't sleep, what are they thinking about or searching for?", help: 'Get specific. What are they typing into Google at 2am?', ex: "They're up at midnight checking the bank app. They google \"how much should I pay myself as a small business owner.\"" },
+    { k: 'voice', head: 'THE VOICE IN THEIR HEAD', label: 'What do they say to themselves when it gets hard?', help: 'Use their words, the way they would say it.', ex: '"I should know this by now." "If I look too close I\'ll find out I\'m losing money."' },
+    { k: 'tried', head: "WHAT THEY'VE ALREADY TRIED", label: "What have they already tried, and why didn't it stick?", ex: "They bought the software and never set it up. They hired their cousin, who did it once and then got busy." },
+    { k: 'cost', head: 'WHAT STAYING STUCK IS COSTING THEM', label: 'What is staying stuck costing them?', help: 'Money, time, energy, relationships, confidence.', ex: "Late fees. Sundays with their family. They can't tell if the shop is working, so they don't dare hire help." },
+    { k: 'want', head: 'WHAT THEY REALLY WANT', label: "What do they really want, and what's the first small win they'd notice?", ex: 'To know their numbers and pay themselves on purpose. The first win is opening the bank app without a knot in their stomach.' },
+    { k: 'hesitate', head: 'WHAT MAKES THEM HESITATE', label: 'What makes them hesitate before they buy?', ex: "They're embarrassed about how messy it is. They worry it costs more than they can spend right now." },
+    { k: 'words', head: 'THEIR EXACT WORDS', label: "Things they've said to you, word for word. One per line.", help: 'From calls, DMs, comments or reviews. These are gold for your posts.', ex: '"I just want to know if I\'m actually making money."\n"I avoid it until it\'s an emergency."', rows: 4 }
+  ];
+  function soulHereFilled() { var so = state.soul; return SOUL_QS.some(function (q) { return (so[q.k] || '').trim(); }); }
+  function mirrorDoc() {
+    var so = state.soul, n = bpName(), x = [];
+    function t(v) { return (v || '').trim(); }
+    x.push('SOULMATE CLIENT MIRROR SHEET' + (n ? ': ' + n.toUpperCase() : ''), '', mirrorNote());
+    if (t(so.help) || t(so.called)) {
+      x.push('', 'WHAT YOU DO AND WHO YOU ARE CALLED TO');
+      if (t(so.help)) x.push('What you help people with: ' + t(so.help));
+      if (t(so.called)) x.push('Who you feel most called to work with: ' + t(so.called));
+    }
+    SOUL_QS.forEach(function (q) {
+      var v = t(so[q.k]); if (!v) return;
+      x.push('', q.head);
+      if (q.k === 'words') v.split(/\n+/).forEach(function (l) { l = l.trim(); if (l) x.push('- ' + l); });
+      else x.push(v);
+    });
+    var open = openCenterList();
+    x.push('', 'WHERE YOU MIRROR THEM');
+    if (t(so.story)) x.push('Your story: ' + t(so.story), '');
+    if (open.length) {
+      x.push("Your open centers are where you take in other people's energy. You've felt what your soulmate client feels in these places, so this is where your words land.");
+      open.forEach(function (c) {
+        var O = CENTER_DEEP[c.id].open;
+        x.push('', 'Open ' + c.label, '- What you take in: ' + O.takeIn, '- The wisdom it gives you: ' + O.wisdom, '- Who it draws to you: ' + O.draws, '- The voice in their head here: ' + O.voice.map(function (v) { return '"' + v + '"'; }).join(' '));
+      });
+    } else x.push('Add your chart in Promote by Design and your open centers fill in here.');
+    var hooks = [];
+    open.forEach(function (c) { CENTER_DEEP[c.id].open.lines.forEach(function (l) { hooks.push({ c: c.label, l: l }); }); });
+    if (hooks.length) {
+      x.push('', 'READY TO USE HOOKS', 'Opening lines from your open centers. Swap in details from the sections above so they sound like your clients.');
+      hooks.slice(0, 8).forEach(function (h) { x.push('- (' + h.c + ') "' + h.l.line + '"'); });
+    }
+    x.push('', 'FOR ANY AI WRITING WITH THIS SHEET',
+      "- Start each post with a real moment from this sheet, and use her clients' exact words where you can.",
+      '- Pair it with her HD Blueprint Profile so it sounds like her.',
+      "- Only use what is here. Don't invent details, results or quotes.",
+      '- Never use Human Design words in her posts. Her readers should feel understood, not taught.');
+    return x.join('\n');
   }
   function renderSoul() {
     var box = $('view'); box.innerHTML = '';
@@ -3142,7 +3197,7 @@
     box.appendChild(el('div', {}, [
       p('Build your profile · 2 of 2', 'eyebrow'),
       el('h1', {}, ['My soulmate ', el('em', { text: 'client' })]),
-      p("Your Soulmate Client Mirror Sheet shows who your soulmate client is, what they're living, and where you mirror them through your Human Design. It gives your content the micro specifics that magnetize your ideal clients. Claude builds it from your answers and your client calls.", 'lede'),
+      p("Your Soulmate Client Mirror Sheet shows who your soulmate client is, what they're living, and where you mirror them through your Human Design. It gives your content the micro specifics that magnetize your ideal clients. Answer a few questions right here, or have Claude or ChatGPT build it from your client calls.", 'lede'),
       speakTip()
     ]));
     box.appendChild(el('section', { class: 'card', 'aria-label': 'Why your open centers matter' }, [
@@ -3152,63 +3207,95 @@
     ]));
 
     var open = openCenterList();
-    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 1: Answer a few questions' }, [
-      el('h3', { text: 'Step 1: Answer a few questions' }),
-      field({ label: 'What do you help people with, in your own words?', multi: true, rows: 2, ex: 'I help solo coaches get their admin off their plate so they can focus on clients.', get: function () { return so.help; }, set: function (v) { so.help = v; } }),
-      field({ label: 'Who do you feel most called to work with, and why them?', multi: true, rows: 2, help: 'The people you light up working with.', ex: 'Solo coaches who are great at their work but drowning in the admin side.', get: function () { return so.called; }, set: function (v) { so.called = v; } }),
-      field({ label: 'Your story. Where were you before you found what you do now?', multi: true, rows: 3, help: "Especially if you've lived what your buyer is living.", ex: 'I ran my own business and spent every night catching up on emails I meant to answer at noon.', get: function () { return so.story; }, set: function (v) { so.story = v; } }),
-      field({ label: 'What will you upload?', multi: true, rows: 2, help: "Call transcripts from your last 3 to 5 clients work best. No recordings? DMs, reviews in your niche, voice notes or your own story work too. Only share what you're comfortable sharing.", ex: 'Zoom transcripts from 4 discovery calls and a few DMs.', get: function () { return so.sources; }, set: function (v) { so.sources = v; } }),
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 1: About you' }, [
+      el('h3', { text: 'Step 1: About you' }),
+      p('Both options use these answers.', 'hint'),
+      field({ label: 'What do you help people with, in your own words?', multi: true, rows: 2, ex: 'I help small shop owners get their books in order so they know what they are actually making.', get: function () { return so.help; }, set: function (v) { so.help = v; } }),
+      field({ label: 'Who do you feel most called to work with, and why them?', multi: true, rows: 2, help: 'The people you light up working with.', ex: 'Shop owners who are amazing at what they sell and avoid their numbers.', get: function () { return so.called; }, set: function (v) { so.called = v; } }),
+      field({ label: 'Your story. Where were you before you found what you do now?', multi: true, rows: 3, help: "Especially if you've lived what your soulmate client is living.", ex: 'I ran my own shop and hid my receipts in a shoebox for two years before I learned this.', get: function () { return so.story; }, set: function (v) { so.story = v; } }),
       el('div', { class: 'field' }, [
         el('label', { text: 'Your open centers' }),
         open.length
           ? el('div', { class: 'chips' }, open.map(function (c) { return el('span', { class: 'chip', 'aria-pressed': 'true', text: c.label }); }))
           : el('div', {}, [p('Add your chart in My design and your open centers fill in here.', 'help'), el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn small', text: 'Go to my design', onclick: function () { setView('design'); } })])]),
-        open.length ? p('These come from your chart, and they go into your prompt automatically.', 'help') : null
+        open.length ? p('These come from your chart. They go into your sheet automatically.', 'help') : null
       ])
     ]));
 
-    var promptBox = el('textarea', { class: 'textarea', rows: 8, readonly: true, 'aria-label': 'Your Client Mirror Sheet prompt' });
-    promptBox.value = mirrorPrompt();
-    box.addEventListener('input', function () { promptBox.value = mirrorPrompt(); });
-    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 2: Build it in Claude' }, [
-      el('h3', { text: 'Step 2: Build it in Claude' }),
-      el('ol', { class: 'steps' }, [
-        el('li', {}, [el('span', { class: 'st', text: 'Copy your prompt' }), 'Your answers and your open centers are already in it.']),
-        el('li', {}, [el('span', { class: 'st', text: 'Open Claude' }), 'Start a chat in your Project, paste your prompt, and upload your transcripts or notes. Claude handles long transcripts best, so use Claude for this one.']),
-        el('li', {}, [el('span', { class: 'st', text: 'Make it yours' }), "Read it through. If something doesn't sound like your clients, tell Claude and it fixes it. When it's right, it gives you the file."])
-      ]),
-      el('div', { class: 'actions' }, [
-        el('button', { type: 'button', class: 'btn main', text: 'Copy my prompt', onclick: function () {
-          if (!(so.help.trim() || so.called.trim())) { toast('Answer a question or two first.'); return; }
-          promptBox.value = mirrorPrompt(); copyText(promptBox.value, 'Copied. Paste it into Claude and upload your transcripts.');
-        } }),
-        el('a', { class: 'btn', href: CLAUDE_URL, target: '_blank', rel: 'noopener noreferrer', text: 'Open Claude' })
-      ]),
-      el('details', { class: 'day' }, [
-        el('summary', {}, [el('span', { class: 'chev', 'aria-hidden': 'true', text: '›' }), el('span', { class: 'ddate', text: 'Peek at your prompt' })]),
-        el('div', { class: 'day-body' }, [promptBox])
-      ]),
-      p("The prompt tells Claude to leave out your clients' names and anything that could identify them.", 'hint')
-    ]));
-
-    var sheet = el('textarea', { class: 'textarea post', placeholder: 'Paste your finished Client Mirror Sheet here.', 'aria-label': 'Your Client Mirror Sheet' });
-    sheet.value = so.sheet;
-    var meta = el('span', { class: 'hint' });
-    function upd() { var n = so.sheet.trim() ? so.sheet.trim().split(/\s+/).length : 0; meta.textContent = n ? n + ' words saved' : ''; }
-    sheet.addEventListener('input', function () { so.sheet = sheet.value; saveSoon(); upd(); });
-    upd();
-    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 3: Save it to your Project' }, [
-      el('h3', { text: 'Step 3: Save it to your Project' }),
-      p('Claude gives you your sheet as a file. Download it and add it to your Claude or ChatGPT Project files, right next to your HD Blueprint Profile.', 'hint'),
-      p('Want a copy here too? Paste it below and you can download it from here any time.', 'hint'),
-      sheet, meta,
-      el('div', { class: 'actions' }, [
-        el('button', { type: 'button', class: 'btn small', text: 'Download my sheet', onclick: function () {
-          if (!so.sheet.trim()) { toast('Paste your sheet first.'); return; }
-          downloadText(so.sheet, 'soulmate-client-mirror-sheet' + (bpName() ? '-' + fileSlug(bpName()) : '') + '.md', 'Downloaded. Add it to your Claude Project files.');
-        } })
-      ])
-    ]));
+    var step2 = el('section', { class: 'card', 'aria-label': 'Step 2: Get your Mirror Sheet' });
+    box.appendChild(step2);
+    function drawStep2() {
+      step2.innerHTML = '';
+      var mode = so.mode === 'ai' ? 'ai' : 'here';
+      step2.appendChild(el('h3', { text: 'Step 2: Get your Mirror Sheet' }));
+      step2.appendChild(p('Pick one. Both give you a file to add to your Project.', 'hint'));
+      step2.appendChild(el('div', { class: 'chips', role: 'group', 'aria-label': 'How to build it' }, [
+        el('button', { type: 'button', class: 'chip', 'aria-pressed': mode === 'here' ? 'true' : 'false', text: 'Option 1: Answer here', onclick: function () { so.mode = 'here'; save(); drawStep2(); } }),
+        el('button', { type: 'button', class: 'chip', 'aria-pressed': mode === 'ai' ? 'true' : 'false', text: 'Option 2: Use Claude or ChatGPT', onclick: function () { so.mode = 'ai'; save(); drawStep2(); } })
+      ]));
+      if (mode === 'here') {
+        step2.appendChild(el('div', { class: 'sub' }, [
+          p("Think of one or two clients you loved working with. Answer for them. Short answers are fine. Skip any you're not sure about.", 'hint')
+        ]));
+        SOUL_QS.forEach(function (q) {
+          step2.appendChild(field({ label: q.label, multi: true, rows: q.rows || 2, help: q.help, ex: q.ex, get: function () { return so[q.k]; }, set: function (v) { so[q.k] = v; } }));
+        });
+        step2.appendChild(p('We add where you mirror them and opening lines from your open centers for you.', 'hint'));
+        step2.appendChild(el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Download my Mirror Sheet', onclick: function () {
+          if (!soulHereFilled()) { toast('Answer a few questions first.'); return; }
+          save();
+          downloadText(mirrorDoc(), 'soulmate-client-mirror-sheet' + (bpName() ? '-' + fileSlug(bpName()) : '') + '.md', 'Downloaded. Add it to your Project files.');
+        } })]));
+        var peek = el('textarea', { class: 'textarea', rows: 10, readonly: true, 'aria-label': 'Your Mirror Sheet' });
+        peek.value = mirrorDoc();
+        step2.addEventListener('input', function () { peek.value = mirrorDoc(); });
+        step2.appendChild(el('details', { class: 'day' }, [
+          el('summary', {}, [el('span', { class: 'chev', 'aria-hidden': 'true', text: '›' }), el('span', { class: 'ddate', text: 'Peek at your sheet' })]),
+          el('div', { class: 'day-body' }, [peek])
+        ]));
+      } else {
+        step2.appendChild(el('div', { class: 'sub' }, [
+          p("Best when you have call transcripts, DMs or reviews. It reads them and pulls out your clients' real moments and words.", 'hint')
+        ]));
+        step2.appendChild(field({ label: 'What will you upload?', multi: true, rows: 2, help: "Call transcripts from your last 3 to 5 clients work best. No recordings? DMs, reviews in your niche, voice notes or your own story work too. Only share what you're comfortable sharing.", ex: 'Zoom transcripts from 4 discovery calls and a few DMs.', get: function () { return so.sources; }, set: function (v) { so.sources = v; } }));
+        var promptBox = el('textarea', { class: 'textarea', rows: 8, readonly: true, 'aria-label': 'Your Mirror Sheet prompt' });
+        promptBox.value = mirrorPrompt();
+        step2.addEventListener('input', function () { promptBox.value = mirrorPrompt(); });
+        step2.appendChild(el('ol', { class: 'steps' }, [
+          el('li', {}, [el('span', { class: 'st', text: 'Copy your prompt' }), 'Your answers and your open centers are already in it.']),
+          el('li', {}, [el('span', { class: 'st', text: 'Paste it in your Project' }), 'Start a chat in your Claude or ChatGPT Project, paste your prompt, and upload your transcripts or notes. Claude handles long transcripts best.']),
+          el('li', {}, [el('span', { class: 'st', text: 'Make it yours' }), "Read it through. If something doesn't sound like your clients, say so and it gets fixed. When it's right, it gives you the file."]),
+          el('li', {}, [el('span', { class: 'st', text: 'Paste it back in' }), 'Copy the finished sheet and paste it in the box below, so it lives here too.'])
+        ]));
+        step2.appendChild(el('div', { class: 'actions' }, [
+          el('button', { type: 'button', class: 'btn main', text: 'Copy my prompt', onclick: function () {
+            if (!(so.help.trim() || so.called.trim())) { toast('Answer a question or two in Step 1 first.'); return; }
+            promptBox.value = mirrorPrompt(); copyText(promptBox.value, 'Copied. Paste it into your Project and upload your transcripts.');
+          } }),
+          el('a', { class: 'btn', href: CLAUDE_URL, target: '_blank', rel: 'noopener noreferrer', text: 'Open Claude' }),
+          el('a', { class: 'btn', href: 'https://chatgpt.com/', target: '_blank', rel: 'noopener noreferrer', text: 'Open ChatGPT' })
+        ]));
+        step2.appendChild(el('details', { class: 'day' }, [
+          el('summary', {}, [el('span', { class: 'chev', 'aria-hidden': 'true', text: '›' }), el('span', { class: 'ddate', text: 'Peek at your prompt' })]),
+          el('div', { class: 'day-body' }, [promptBox])
+        ]));
+        step2.appendChild(p("The prompt asks it to leave out your clients' names and anything that could identify them.", 'hint'));
+        var sheet = el('textarea', { class: 'textarea post', placeholder: 'Paste your finished Mirror Sheet here.', 'aria-label': 'Paste your Mirror Sheet back in' });
+        sheet.value = so.sheet;
+        var meta = el('span', { class: 'hint' });
+        function upd() { var w = so.sheet.trim() ? so.sheet.trim().split(/\s+/).length : 0; meta.textContent = w ? w + ' words saved' : ''; }
+        sheet.addEventListener('input', function () { so.sheet = sheet.value; saveSoon(); upd(); });
+        upd();
+        step2.appendChild(el('div', { class: 'field' }, [el('label', { text: 'Paste it back in' }), sheet, meta]));
+        step2.appendChild(el('div', { class: 'actions' }, [
+          el('button', { type: 'button', class: 'btn small', text: 'Download my Mirror Sheet', onclick: function () {
+            if (!so.sheet.trim()) { toast('Paste your sheet first.'); return; }
+            downloadText(so.sheet, 'soulmate-client-mirror-sheet' + (bpName() ? '-' + fileSlug(bpName()) : '') + '.md', 'Downloaded. Add it to your Project files.');
+          } })
+        ]));
+      }
+    }
+    drawStep2();
     box.appendChild(projectCard());
     box.appendChild(el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Next: my prompts', onclick: function () { save(); setView('prompts'); } })]));
     box.appendChild(p("That's your profile done. Every chat inside your Project now knows how you're designed and who you're here for. Everything here saves as you type.", 'saved-note'));
@@ -4533,5 +4620,3 @@
 </script>
 </body>
 </html>
-
-</body></html>
