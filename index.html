@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1661,9 +1662,6 @@
         el('span', { text: v.label }),
         v.soon ? el('span', { class: 'soon', text: 'Soon' }) : null
       ]));
-      if (v.id === 'prompts') nav.appendChild(el('a', { class: 'navitem', href: SHE_POSTS_URL || (SHE_PROMOTES_URL + '/classroom'), target: '_blank', rel: 'noopener noreferrer' }, [
-        el('span', { class: 'gl', 'aria-hidden': 'true', text: '\u2726' }), el('span', { text: 'Plan my week in She Posts\u2122 \u2197' })
-      ]));
       if (v.id === 'guide' && state.design.done) {
         var inGuide = /^guide/.test(state.view);
         var openG = navOpen.guide == null ? inGuide : navOpen.guide;
@@ -1909,9 +1907,9 @@
         el('li', {}, [el('span', { class: 'st', text: 'Promote by design' }), 'Your personal promo guide, built from your chart. How to start the conversation, when to hit post, the voice you naturally speak in, and who you are here for.']),
         el('li', {}, [el('span', { class: 'st', text: '1. My HD Blueprint' }), 'One file that tells Claude how you are designed to show up, communicate and sell. Download it, or have Claude write a fuller version.']),
         el('li', {}, [el('span', { class: 'st', text: '2. My Soulmate Client' }), 'Build your Soulmate Client Mirror Sheet in Claude from your client calls and your open centers.']),
-        el('li', {}, [el('span', { class: 'st', text: 'Add them to Claude' }), 'Put both files in a Claude or ChatGPT Project. Every chat inside it already knows how you are designed and who you are here for.']),
-        el('li', {}, [el('span', { class: 'st', text: 'My prompts' }), 'Ready-made prompts, filled in with your design, to learn more about yourself and your soulmate clients and to write through your design.']),
-        el('li', {}, [el('span', { class: 'st', text: 'Plan your week in She Posts\u2122' }), 'Build your posts for the week with Claude inside your Project, so every one comes through your design.'])
+        el('li', {}, [el('span', { class: 'st', text: 'Add them to your Project' }), 'Add both files to the Claude or ChatGPT Project you use for your marketing or your business, or start a new one. Every chat inside it then knows how you are designed and who you are here for.']),
+        el('li', {}, [el('span', { class: 'st', text: 'My prompts' }), 'Ready-made prompts, filled in with your design, to learn more about yourself and your soulmate clients and to write through your design.'])
+
       ]),
       p("Everything saves on this device. Use the same phone or computer each time and it will all be waiting for you.", 'where')
     ]));
@@ -2776,105 +2774,116 @@
     out.gates = throatGates(d).map(function (g) { return { num: g, voice: GATE_VOICE[g], x: GATE_DEEP[g], ch: gateChannelLine(d, g) }; });
     return out;
   }
+  function aiNote() {
+    var n = bpName();
+    return n
+      ? 'A note for any AI reading this file: this profile is written to ' + n + '. Everywhere it says "you," it means ' + n + '. Use it every time you help her write content, so it sounds like her and speaks to her soulmate clients through her Human Design.'
+      : 'A note for any AI reading this file: this profile is written to the business owner who uploaded it. Everywhere it says "you," it means her. Use it every time you help her write content, so it sounds like her and speaks to her soulmate clients through her Human Design.';
+  }
   function blueprintDoc() {
     var b = blueprintData(), n = bpName(), x = [];
     x.push('# Human Design Blueprint Profile' + (n ? ': ' + n : ''));
-    x.push('');
-    x.push('This is how I am designed to show up, communicate and sell. Use it every time you help me write content, so it sounds like me and speaks to my soulmate clients through my Human Design.');
-    x.push('', 'Some parts below talk to me as "you." They all describe me.');
+    x.push('', '*' + aiNote() + '*');
+    x.push('', 'This is how you are designed to show up, communicate and sell, and who you are here for.');
     if (b.type && b.td) {
-      x.push('', '## My type: ' + b.type.label, b.td.here, '', b.td.means, '',
-        '- **My strategy:** ' + b.td.strategy,
-        '- **When I promote:** ' + b.td.promote,
-        '- **When I sell:** ' + b.td.sell,
-        '- **My call to action style:** ' + clean(b.type.cta),
+      x.push('', '## Your type: ' + b.type.label, b.td.here, '', b.td.means, '',
+        '- **Your strategy:** ' + b.td.strategy,
+        '- **When you promote:** ' + b.td.promote,
+        '- **When you sell:** ' + b.td.sell,
+        '- **A call to action that fits you:** ' + clean(b.type.cta),
         '- **When it feels off:** ' + b.td.off,
-        '- **When I am living my design:** ' + b.td.signature);
+        '- **When you are living your design:** ' + b.td.signature);
     }
     if (b.auth && b.ad) {
-      x.push('', '## My authority: ' + b.auth.label, b.ad.here, '', b.ad.means, '',
+      x.push('', '## Your authority: ' + b.auth.label, b.ad.here, '', b.ad.means, '',
         '- **When to hit post:** ' + b.ad.post,
         '- **Saying yes to a sale:** ' + b.ad.sale);
     }
-    if (b.profile) x.push('', '## My profile', '**' + b.profile.num + ' ' + b.profile.name + '.** ' + clean(b.profile.text));
-    x.push('', '## My centers', '**Defined:** ' + (b.defined.length ? b.defined.join(', ') : 'none') + '.', '**Open:** ' + (b.open.length ? b.open.map(function (o) { return o.label; }).join(', ') : 'none') + '.');
-    x.push('', '## My voice (throat)');
+    if (b.profile) x.push('', '## Your profile', '**' + b.profile.num + ' ' + b.profile.name + '.** ' + clean(b.profile.text));
+    x.push('', '## Your centers', '**Defined:** ' + (b.defined.length ? b.defined.join(', ') : 'none') + '.', '**Open:** ' + (b.open.length ? b.open.map(function (o) { return o.label; }).join(', ') : 'none') + '.');
+    x.push('', '## Your voice (throat)');
     if (b.throatOpen) {
-      x.push('My throat is open. ' + clean(OPEN_THROAT.intro) + ' ' + clean(OPEN_THROAT.para));
+      x.push('Your throat is open. ' + clean(OPEN_THROAT.intro) + ' ' + clean(OPEN_THROAT.para));
       OPEN_THROAT.tips.forEach(function (t) { x.push('- ' + clean(t)); });
     } else {
-      x.push('My throat is defined. ' + clean(DEFINED_THROAT));
+      x.push('Your throat is defined. ' + clean(DEFINED_THROAT));
       if (b.channels.length) {
-        x.push('', '### Channels to my throat');
+        x.push('', '### Channels to your throat');
         b.channels.forEach(function (c) {
-          x.push('', '**Channel ' + c.id + ', ' + c.name + '** (' + c.from + '). It gives my voice ' + c.voiceOf + '. ' + clean(c.blurb));
+          x.push('', '**Channel ' + c.id + ', ' + c.name + '** (' + c.from + '). It gives your voice ' + c.voiceOf + '. ' + clean(c.blurb));
           c.tips.forEach(function (t) { x.push('- ' + clean(t)); });
           if (c.line) x.push('', clean(c.line));
         });
       }
-      x.push('', '### Motor connection', b.motors.length ? clean(WITH_MOTOR) : clean(NO_MOTOR));
+      x.push('', '### Your motor connection', b.motors.length ? clean(WITH_MOTOR) : clean(NO_MOTOR));
       b.motors.forEach(function (m) { x.push('- ' + clean(m)); });
     }
     if (b.gates.length) {
-      x.push('', '## My throat gates', 'Each throat gate speaks in its own way. These are the natural ways I speak, so use them to open my posts.');
+      x.push('', '## Your throat gates', 'Each throat gate speaks in its own way. These are the natural ways you speak, so they make your best opening lines.');
       b.gates.forEach(function (g) {
-        x.push('', '### Gate ' + g.num + ': "' + g.voice + '" (' + g.x.name + ')', g.x.here, '', g.x.means, '', g.ch, '', '- **When I promote:** ' + g.x.promote, '- **When it feels off:** ' + g.x.off, '- **Try this:** ' + g.x.try);
+        x.push('', '### Gate ' + g.num + ': "' + g.voice + '" (' + g.x.name + ')', g.x.here, '', g.x.means, '', g.ch, '', '- **When you promote:** ' + g.x.promote, '- **When it feels off:** ' + g.x.off, '- **Try this:** ' + g.x.try);
       });
     }
     if (b.open.length) {
-      x.push('', '## Who I am here for (my open centers)', "My open centers are where I take in other people's energy and amplify it. I've lived what my soulmate clients live in these places, so this is where they find me and where my words land.");
+      x.push('', '## Who you are here for (your open centers)', "Your open centers are where you take in other people's energy and amplify it. You've lived what your soulmate clients live in these places, so this is where they find you and where your words land.");
       b.open.forEach(function (o) {
         var O = o.o;
         x.push('', '### Open ' + o.label,
           '- **What it is:** ' + o.what,
-          '- **What I take in:** ' + O.takeIn,
-          '- **The wisdom it gives me:** ' + O.wisdom,
-          '- **When it runs me:** ' + O.runsYou + ' The question I ask myself: "' + O.question + '"',
-          '- **Who it draws to me:** ' + O.draws,
+          '- **What you take in:** ' + O.takeIn,
+          '- **The wisdom it gives you:** ' + O.wisdom,
+          '- **When it runs you:** ' + O.runsYou + ' Ask yourself: "' + O.question + '"',
+          '- **Who it draws to you:** ' + O.draws,
           '- **Their micro-moments:**\n' + O.moments.map(function (v) { return '  - ' + v; }).join('\n'),
           '- **The voice in their head:**\n' + O.voice.map(function (v) { return '  - "' + v + '"'; }).join('\n'),
           '- **What they really want:** ' + O.wants,
           '- **How to speak to it:** ' + O.speak,
           '- **Avoid:** ' + O.avoid,
           '- **Opening lines that land:**\n' + O.lines.map(function (v) { return '  - ' + v.type + ': "' + v.line + '" Why it works: ' + v.why; }).join('\n'),
-          '- **How to write my own:** ' + O.formula,
+          '- **How to write your own:** ' + O.formula,
           '- **Title and first paragraph examples:**\n' + O.examples.map(function (v) { return '  - ' + v.who + '. Title: "' + v.title + '" First paragraph: "' + v.para + '"'; }).join('\n'));
       });
     }
     if (b.definedFull.length) {
-      x.push('', '## My steady gifts (my defined centers)', "My defined centers are my steady energy, the same every day. It's what people can count on from me.");
+      x.push('', '## Your steady gifts (your defined centers)', "Your defined centers are your steady energy, the same every day. It's what people can count on from you.");
       b.definedFull.forEach(function (c) {
-        x.push('', '### Defined ' + c.label, '- **Gift:** ' + c.x.gift, '- **How it shows up when I promote:** ' + c.x.promo, '- **Watch for:** ' + c.x.watch);
+        x.push('', '### Defined ' + c.label, '- **Your gift:** ' + c.x.gift, '- **How it shows up when you promote:** ' + c.x.promo, '- **Watch for:** ' + c.x.watch);
       });
     }
-    x.push('', '## How to use this when you write for me',
-      '- Write every post through one of my open centers. Start with that center\'s struggle as a small, real moment, say the voice in their head, then speak to it the way described above.',
-      '- Use my Soulmate Client Mirror Sheet for their real moments and exact words.',
-      "- Match how I'm built to promote and sell, my call to action style and my voice.",
-      "- When it fits, add a small, real moment from my own life that shows I've felt this too. Only use what I've told you.",
-      '- Never use Human Design words in my posts, like open, undefined, center or channel. My readers should feel understood, not taught.');
+    x.push('', '## For any AI writing with this profile',
+      '- Write every post through one of her open centers. Start with that center\'s struggle as a small, real moment, say the voice in their head, then speak to it the way this profile describes.',
+      '- Use her Soulmate Client Mirror Sheet for her clients\' real moments and exact words.',
+      "- Match how she's built to promote and sell, her call to action style and her voice.",
+      "- When it fits, add a small, real moment from her own life that shows she's felt this too. Only use what she has told you.",
+      '- Never use Human Design words in her posts, like open, undefined, center or channel. Her readers should feel understood, not taught.');
     return x.join('\n');
   }
   function blueprintPrompt() {
     var n = bpName();
     return [
-      'I want you to write my Human Design Blueprint Profile. It is a reference file I will add to my Claude Project, so every time you help me write content, you know how I am designed to show up, communicate and sell, and who my soulmate clients are.',
+      'I want you to write my Human Design Blueprint Profile. It is a file I will add to my Claude or ChatGPT Project, so every time you help me write content, you know how I am designed to show up, communicate and sell, and who my soulmate clients are.',
       '',
-      'Below is everything from my chart. Use it as your source. Keep my details exactly as they are, and write the profile in simple, warm, everyday words, like you are explaining me to a friend who is going to write for me.',
+      'Below is everything from my chart. Use it as your source and keep my details exactly as they are.',
+      '',
+      'WRITE IT TO ME',
+      '- Speak straight to me, using "you," like a friend who really sees me. I want to read it and think "that is me."',
+      '- Simple, warm, everyday words. Short sentences.',
+      '- Start the file with this note, in italics, exactly as written:',
+      '"' + aiNote() + '"',
       '',
       'MY CHART DETAILS',
       blueprintDoc(),
       '',
       'HOW TO STRUCTURE THE FILE',
       'Use these sections, in this order, with clear headings:',
-      '1. ' + (n ? n + "'s " : 'My ') + 'Human Design at a glance: type, strategy, authority, profile, and which centers are defined and open, in a few lines.',
-      '2. How I show up and promote: my strategy, how I promote best, and what it looks like when it feels off.',
-      "3. How I'm built to sell: how I sell, my call to action style, and how my authority shows up when I say yes to a sale and when I hit post.",
-      '4. My profile: the role I play with people and how they come to trust me.',
-      '5. My voice: my throat, each channel to my throat and what it gives my voice, my motor connection, and my throat gates with an example opening line for each gate.',
-      "6. Who I'm here for: one part for each open center, with what it is, what I take in, the wisdom it gives me, when it runs me, who it draws to me, their micro-moments, the voice in their head, what they really want, how to speak to it, what to avoid, and opening lines.",
-      '7. My steady gifts: one short part for each defined center, with my gift, how it shows up when I promote, and what to watch for.',
-      '8. How to write for me: the rules from the last section of my chart details, plus anything else you notice from my design.',
+      '1. Your Human Design at a glance: your type, strategy, authority, profile, and which centers are defined and open, in a few lines.',
+      '2. How you show up and promote: your strategy, how you promote best, and what it looks like when it feels off.',
+      "3. How you're built to sell: how you sell, the call to action that fits you, and how your authority shows up when you say yes to a sale and when you hit post.",
+      '4. Your profile: the role you play with people and how they come to trust you.',
+      '5. Your voice: your throat, each channel to your throat and what it gives your voice, your motor connection, and your throat gates with an example opening line for each gate.',
+      "6. Who you're here for: one part for each open center, with what it is, what you take in, the wisdom it gives you, when it runs you, who it draws to you, their micro-moments, the voice in their head, what they really want, how to speak to it, what to avoid, and opening lines.",
+      '7. Your steady gifts: one short part for each defined center, with your gift, how it shows up when you promote, and what to watch for.',
+      '8. For any AI writing with this profile: the rules from the last section of my chart details, written about me as "her," plus anything else you notice from my design.',
       '',
       'RULES',
       "- Only use what's in my chart details. Don't add Human Design details that aren't there.",
@@ -2904,11 +2913,12 @@
     ]);
   }
   function projectCard() {
-    return el('section', { class: 'card', 'aria-label': 'Add it to your Claude Project' }, [
-      el('h3', { text: 'Add it to your Claude Project' }),
+    return el('section', { class: 'card', 'aria-label': 'Add it to your Project' }, [
+      el('h3', { text: 'Add it to your Project' }),
       p('A Project is a saved space in Claude or ChatGPT. It keeps your files and instructions, so every chat inside it already knows you.', 'hint'),
+      p('Already have a Project that writes your marketing or runs your business? Add your files there. No need to start a new one.'),
       el('ol', { class: 'steps' }, [
-        el('li', {}, [el('span', { class: 'st', text: 'Make a Project' }), 'In Claude or ChatGPT, start a new Project. Call it something like My Business.']),
+        el('li', {}, [el('span', { class: 'st', text: 'Pick your Project' }), 'Open the Claude or ChatGPT Project you already use for your marketing or your business. No Project yet? Start a new one and call it something like My Business.']),
         el('li', {}, [el('span', { class: 'st', text: 'Add your files' }), 'Upload your HD Blueprint Profile and your Soulmate Client Mirror Sheet to the Project files.']),
         el('li', {}, [el('span', { class: 'st', text: 'Start writing' }), 'Open a chat inside that Project any time. It already knows how you are designed and who you are here for.'])
       ]),
@@ -2924,7 +2934,7 @@
     box.appendChild(el('div', {}, [
       p('Build your profile · 1 of 2', 'eyebrow'),
       el('h1', {}, ['My HD ', el('em', { text: 'Blueprint' })]),
-      p('Your HD Blueprint Profile is one file that tells Claude how you are designed to show up, communicate and sell, and who you are here for. Add it to your Claude Project once, and every post you write together comes through your design.', 'lede')
+      p('Your HD Blueprint Profile is one file that tells Claude how you are designed to show up, communicate and sell, and who you are here for. Add it once to the Claude or ChatGPT Project you use for your marketing or your business, and every post you write together comes through your design.', 'lede')
     ]));
     if (!d.done) {
       box.appendChild(el('div', { class: 'callout' }, [
@@ -2953,12 +2963,12 @@
     box.appendChild(el('section', { class: 'card', 'aria-label': 'Get your Blueprint' }, [
       el('h3', { text: 'Get your Blueprint' }),
       nameIn,
-      p('Pick one. Both give you a file to add to your Claude Project.', 'hint'),
+      p('Pick one. Both give you a file to add to your Project.', 'hint'),
       el('div', { class: 'sub' }, [
         el('div', { class: 't', text: 'Option 1: Download it' }),
         p('Ready in one tap, built straight from your chart.', 'hint'),
         el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Download my Blueprint', onclick: function () {
-          downloadText(blueprintDoc(), 'hd-blueprint-profile' + (bpName() ? '-' + fileSlug(bpName()) : '') + '.md', 'Downloaded. Add it to your Claude Project files.');
+          downloadText(blueprintDoc(), 'hd-blueprint-profile' + (bpName() ? '-' + fileSlug(bpName()) : '') + '.md', 'Downloaded. Add it to your Project files.');
         } })])
       ]),
       el('div', { class: 'sub' }, [
@@ -3032,7 +3042,7 @@
     box.appendChild(el('div', {}, [
       p('Use it with Claude', 'eyebrow'),
       el('h1', {}, ['My ', el('em', { text: 'prompts' })]),
-      p('Prompts to learn more about yourself and your soulmate clients, and to write through your design. Each one is already filled in with your design. Paste them into a chat inside your Claude Project, where your HD Blueprint Profile and Soulmate Client Mirror Sheet live.', 'lede')
+      p('Prompts to learn more about yourself and your soulmate clients, and to write through your design. Each one is already filled in with your design. Paste them into a chat inside your Claude or ChatGPT Project, where your HD Blueprint Profile and Soulmate Client Mirror Sheet live.', 'lede')
     ]));
     if (!d.done) {
       box.appendChild(el('div', { class: 'callout' }, [
@@ -3066,7 +3076,6 @@
       });
     });
     box.appendChild(el('div', { class: 'actions' }, [el('a', { class: 'btn', href: CLAUDE_URL, target: '_blank', rel: 'noopener noreferrer', text: 'Open Claude' })]));
-    box.appendChild(shePostsCard());
   }
   function renderKeepPrompts() { var y = window.pageYOffset; renderPrompts(); window.scrollTo(0, y); }
 
@@ -3201,7 +3210,6 @@
       ])
     ]));
     box.appendChild(projectCard());
-    box.appendChild(shePostsCard());
     box.appendChild(el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Next: my prompts', onclick: function () { save(); setView('prompts'); } })]));
     box.appendChild(p("That's your profile done. Every chat inside your Project now knows how you're designed and who you're here for. Everything here saves as you type.", 'saved-note'));
   }
@@ -4525,3 +4533,5 @@
 </script>
 </body>
 </html>
+
+</body></html>
