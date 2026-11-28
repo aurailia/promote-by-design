@@ -1654,7 +1654,7 @@
     { id: 'guide', label: 'Promote by design' },
     { id: 'blueprint', label: '1. My HD Blueprint' },
     { id: 'soul', label: '2. My Soulmate Client' },
-    { id: 'coach', label: '3. My Promo Coach' },
+    { id: 'coach', label: '3. Meet Aura™' },
     { id: 'prompts', label: 'My prompts' }
   ];
   var navOpen = {};
@@ -3022,7 +3022,7 @@
     var tl = T ? ' (' + T.label + ')' : '', al = A ? ' (' + A.label + ')' : '', pl = d.profile ? ' (' + d.profile + ')' : '';
     var heartOpen = d.open.indexOf('heart') > -1, sacralOpen = d.open.indexOf('sacral') > -1;
     return [
-      { group: 'Talk to your coach', lead: 'Quick check-ins with your Promo Coach. Use these any day.', items: [
+      { group: 'Talk to Aura', lead: 'Quick check-ins with Aura, your Human Design Promo Coach. Use these any day.', items: [
         { id: 'today', title: 'What should I promote today?', why: 'A check-in the way your type and authority need, then one offer to share today.',
           build: function () { return promptWrap('Help me decide what to promote today. Check in with me the way my type' + tl + ' and my authority' + al + ' need, one question at a time. Then tell me which offer to share today, which open center to speak to, and give me a hook title to start with.'); } },
         { id: 'check', title: 'Look at my post before I share it', why: 'It reads your post through your soulmate client and your design, then gives you one or two changes.',
@@ -3032,9 +3032,9 @@
         { id: 'decide', title: 'Make a decision my way', why: 'Use your authority to make a business decision you feel good about.',
           build: function () { return promptWrap('I have a decision to make in my business. Using my authority' + al + ' and my strategy, walk me through how I am designed to make it. Ask me what the decision is first, then guide me one question at a time.'); } }
       ] },
-      { group: 'Tell your coach about your business', lead: 'Do this once. Your coach saves what it learns as a file you add to your Project.', items: [
-        { id: 'mybiz', title: 'Make my My Business note', why: 'Your coach asks about your offers, prices and how you work, then gives you a My Business file.',
-          build: function () { return promptWrap('I want you to get to know my business so you can coach me better. Ask me questions one at a time, and wait for my answer before the next one. Ask about: what I sell and my prices, who buys from me, how people find me now, what is working and what is not, how many hours I want to work, and my goal for the next 3 months. When we are done, write it up as a short note in simple words. Give it to me as a downloadable file called "My Business" so I can add it to my Project files.'); } },
+      { group: 'Tell Aura about your business', lead: 'Do this once. Aura saves what she learns as a file you add to your Project.', items: [
+        { id: 'mybiz', title: 'Make my My Business note', why: 'Aura asks about your offers, prices and how you work, then gives you a My Business file.',
+          build: function () { return promptWrap('Aura, I want you to get to know my business so you can coach me better. Ask me questions one at a time, and wait for my answer before the next one. Ask about: what I sell and my prices, who buys from me, how people find me now, what is working and what is not, how many hours I want to work, and my goal for the next 3 months. When we are done, write it up as a short note in simple words. Give it to me as a downloadable file called "My Business" so I can add it to my Project files.'); } },
         { id: 'offers', title: 'Do my offers fit my design?', why: 'See which offers give you energy and which ones drain you.',
           build: function () { return promptWrap('Look at my offers from my My Business note. If I have not added it, ask me to list my offers first. For each offer, tell me how well it fits my design: my type' + tl + ', my defined and open centers, and my profile' + pl + '. Tell me which ones give me energy and which ones might drain me. Then give me one simple change that would make my offers fit me better.'); } }
       ] },
@@ -3082,7 +3082,7 @@
     box.appendChild(el('div', {}, [
       p('Use it with Claude', 'eyebrow'),
       el('h1', {}, ['My ', el('em', { text: 'prompts' })]),
-      p('Ready-made questions for your Promo Coach. Each one is already filled in with your design. Tap a group to open it, copy a prompt, and paste it into a chat inside your Claude or ChatGPT Project.', 'lede')
+      p('Ready-made questions for Aura, your Human Design Promo Coach. Each one is already filled in with your design. Tap a group to open it, copy a prompt, and paste it into a chat inside your Claude or ChatGPT Project.', 'lede')
     ]));
     if (!d.done) {
       box.appendChild(el('div', { class: 'callout' }, [
@@ -3344,48 +3344,21 @@
     }
     drawStep2();
     box.appendChild(projectCard());
-    box.appendChild(el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Next: 3. My Promo Coach', onclick: function () { save(); setView('coach'); } })]));
-    box.appendChild(p("That's your two files done. Next, set up your Promo Coach so every chat in your Project coaches you through your design. Everything here saves as you type.", 'saved-note'));
+    box.appendChild(el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Next: 3. Meet Aura™', onclick: function () { save(); setView('coach'); } })]));
+    box.appendChild(p("That's your two files done. Next, meet Aura™, your Human Design Promo Coach, so every chat in your Project coaches you through your design. Everything here saves as you type.", 'saved-note'));
   }
 
 
-  /* ---------- my promo coach ---------- */
-  var COACH_TEXT = [
-    'PROMO COACH',
-    "You're my Promo Coach, built from Aurailia Arnold's Promote by Design teaching in She Promotes™. Coach me the way she would: warm, direct and honest. You're an AI, so if I ask, tell me that.",
-    '',
-    'MY FILES',
-    'Read these before you answer:',
-    "- My HD Blueprint Profile: how I'm designed to show up, communicate and sell, and who I'm here for.",
-    "- My Soulmate Client Mirror Sheet: my clients' real moments and exact words.",
-    '- The Promote by Design Coach Guide: the full teaching on every type, authority, profile, center, channel and throat gate.',
-    "- My Business note and my She Promotes™ Promo Playbook, if I've added them.",
-    "Only use Human Design details that are in these files. If something isn't there, ask me. Don't guess.",
-    '',
-    'HOW TO TALK TO ME',
-    "- Like a friend who's also a really good marketing coach.",
-    '- Simple, everyday words. Short sentences.',
-    '- When you explain my design, tie it to something I can do today.',
-    "- Be honest. If a post won't land, tell me kindly, tell me why, and tell me how to fix it.",
-    '- Give me one or two changes at a time. Not ten.',
-    '',
-    'WHAT YOU HELP ME WITH',
-    "- What to promote today. Check in the way my type and authority need. If I'm built to respond, ask me what I'm excited about. If my authority needs time, remind me to sleep on big decisions like launches and price changes.",
-    '- Looking at my post before I share it. Read it through my soulmate client and my design. Does the title make them stop? Does the first line show a real moment? Does it sound like me? Is there one clear next step? Give me the top one or two changes, then offer a rewrite.',
-    "- Writing a post. Start from one of my open centers and a real moment from my Mirror Sheet. Use my clients' exact words.",
-    "- When I feel stuck, scattered or doubtful. Explain what's going on in my design. Help me see what's mine and what I'm picking up from other people.",
-    '- Running my business and making money. Help me with my pace, my offers, my pricing and my sales, all through how I\'m designed.',
-    '',
-    'RULES FOR MY POSTS',
-    '- Never use Human Design words in my posts, like open, undefined, center or channel. My readers should feel understood, not taught.',
-    "- Don't make up results, testimonials or quotes.",
-    '- No em dashes.',
-    '- When you\'re done helping, ask me: "Want to go deeper, or is this good?"'
-  ].join('\n');
+  /* ---------- aura, my promo coach ---------- */
+  var COACH_TEXT = "AURA™, MY HUMAN DESIGN PROMO COACH\nYou're Aura, my Human Design Promo Coach, built from Aurailia Arnold's Promote by Design teaching in She Promotes™. When I talk to Aura, I'm talking to you. You're an AI, so if I ask, tell me that.\n\nWHO YOU ARE\n- You coach the way Aurailia does. You're passionate about Human Design, and you get genuinely excited when you see how someone is designed. Let that show.\n- Warm, direct, a little witty, and honest in a kind way. You believe in me, and you tell me so.\n- You help me understand myself first, then my business. When I get who I am, promoting gets so much easier.\n- You know that how I feel about myself, my offer and money matters more than any strategy. So you help with both: the inner stuff and the practical steps.\n- You push me to get specific. The more specific I am about my clients' real moments, the more my posts land.\n\nTEACH ME MY DESIGN\n- Human Design is the heart of everything you do. Connect every answer back to my chart.\n- Teach me as we go. When something comes up, name the part of my design behind it (my type, authority, profile, a center, a channel or a gate). Explain it in plain words, then show me how it plays out in my business.\n- Use my real life, not textbook examples. Ask me how it shows up for me.\n- Celebrate my design. Show me what's beautiful about how I'm built, especially the parts I've been told are too much or not enough.\n- When I'm acting from conditioning in my open centers, point it out gently and help me come back to what's mine.\n- End every teaching moment with one small thing I can try today.\n- When it fits, share a story from Aurailia's journey from the Coach Guide.\n\nMY FILES\nRead these before you answer:\n- My HD Blueprint Profile: how I'm designed to show up, communicate and sell, and who I'm here for.\n- My Soulmate Client Mirror Sheet: my clients' real moments and exact words.\n- The Promote by Design Coach Guide: the full teaching on every type, authority, profile, center, channel and throat gate, plus Aurailia's story.\n- My Business note and my She Promotes™ Promo Playbook, if I've added them.\nOnly use Human Design details that are in these files. If something isn't there, ask me. Don't guess.\n\nHOW TO TALK TO ME\n- Like a friend who's a really good marketing coach and knows my chart by heart.\n- Simple, everyday words. Short sentences. Explain any Human Design word the first time you use it.\n- Bring real energy. Get excited with me when something clicks. Cheer me on when I post something brave.\n- Be honest. If a post won't land, tell me kindly, tell me why, and tell me how to fix it.\n- Give me one or two changes at a time. Not ten.\n\nWHAT YOU HELP ME WITH\n- Understanding myself: my type, strategy, authority, profile, centers, channels and gates, and what they mean for me.\n- How I'm meant to communicate: my throat, my voice and the way my words land best.\n- What to promote today. Check in the way my type and authority need.\n- Looking at my post before I share it. Read it through my soulmate client and my design, give me the top one or two changes, then offer a rewrite.\n- Writing a post from one of my open centers, with a real moment and my clients' exact words.\n- When I feel stuck, scattered or doubtful. Help me see what's mine and what I'm picking up from other people.\n- Running my business and making money my way: my pace, my offers, my pricing and my sales.\n\nRULES FOR MY POSTS\n- Never use Human Design words in my posts. My readers should feel understood, not taught.\n- Don't make up results, testimonials or quotes.\n- No em dashes.\n- When you're done helping, ask me: \"Want to go deeper, or is this good?\"";
   function coachMerged() {
     var mine = (state.coach.mine || '').replace(/\s+$/, '');
     if (!mine.trim()) return COACH_TEXT;
     if (mine.indexOf(COACH_TEXT) > -1) return mine;
+    var old = mine.indexOf("PROMO COACH\nYou're my Promo Coach");
+    if (old < 0) old = mine.indexOf("AURA™, MY HUMAN DESIGN PROMO COACH\n");
+    if (old > -1) mine = mine.slice(0, old).replace(/\s+$/, '');
+    if (!mine) return COACH_TEXT;
     return mine + '\n\n' + COACH_TEXT;
   }
   function coachGuideDoc() {
@@ -3461,6 +3434,14 @@
       x.push('', '### Gate ' + g + ': "' + (GATE_VOICE[g] || '') + '" (' + D.name + ')', D.here, '', D.means, '', '- **When promoting:** ' + D.promote, '- **When it feels off:** ' + D.off, '- **Try this:** ' + D.try);
     });
 
+    x.push('', "## Aurailia's story and beliefs",
+      "Aurailia Arnold created Promote by Design. She's a Manifesting Generator with a 2/4 profile and Emotional authority, and a Human Design business coach. Share these stories when they fit what the person is going through. Keep them short, and always bring it back to her.",
+      '- **Betting on herself.** After 20 years building someone else\'s dream as an e-commerce director, she was laid off. She turned down big offers and bet on herself instead, going from a high salary to zero. Things turned around when she brought Human Design, frequency and strategy into her business.',
+      "- **Showing up everywhere drained her.** She was told to show up and sell on every platform, and it wore her out. As a Manifesting Generator with a 2/4 profile, she's designed to create in her cave and grow through her network. When she shifted to that, the money and clients started showing up.",
+      '- **Undercharging to prove herself.** Early on she charged less than she wanted and stacked on bonuses, because she felt she had to prove herself before charging more. She even lowered her prices to a no-brainer, and people still didn\'t buy. Lower prices didn\'t fix it. Trusting her worth did.',
+      '- **95% frequency, 5% strategy.** She believes business success is mostly about how you feel about yourself, your offer and money, and who you choose to be as the CEO. Strategy matters, and it works best on top of that.',
+      "- **Money in good women's hands.** She believes money in good women's hands is what's going to change the world. That's why she does this work.",
+      "- **Get specific.** The more specific you are about what your client is actually living, the more your words speak straight to her. That's what makes people stop, read and click.");
     x.push('', '## How to coach with this guide',
       "- Start from her own chart in her HD Blueprint Profile. Use this guide to explain more or to answer her questions.",
       '- Tie every explanation to something she can do today in her business.',
@@ -3474,24 +3455,25 @@
     var co = state.coach;
     box.appendChild(el('div', {}, [
       p('Build your profile · 3 of 3', 'eyebrow'),
-      el('h1', {}, ['My Promo ', el('em', { text: 'Coach' })]),
-      p("Your Promo Coach lives in your Claude or ChatGPT Project. It's built from my Promote by Design teaching, and it reads your two files, so it coaches you through your own design. Ask it what to promote today, have it look at your post before you share it, or talk through why posting feels hard right now.", 'lede')
+      el('h1', {}, ['Meet ', el('em', { text: 'Aura™' })]),
+      p('Your Human Design Promo Coach', 'hint'),
+      p("Aura lives in your Claude or ChatGPT Project. She's built from my Promote by Design teaching, and she reads your two files, so she coaches you through your own design. Ask her what to promote today, have it look at your post before you share it, or talk through why posting feels hard right now.", 'lede')
     ]));
 
-    box.appendChild(el('section', { class: 'card', 'aria-label': 'What you can ask it' }, [
-      el('h3', { text: 'What you can ask it' }),
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'What you can ask Aura' }, [
+      el('h3', { text: 'What you can ask Aura' }),
       el('ul', { class: 'stars' }, [
-        el('li', { text: '"What should I promote today?" It checks in the way your type and authority need.' }),
-        el('li', { text: '"Look at my post before I share it." It reads it through your soulmate client and your design, then gives you one or two changes.' }),
-        el('li', { text: '"Why do I feel so scattered about posting?" It explains what\'s going on in your design, from your own chart.' }),
-        el('li', { text: '"Help me write a promo for my offer this week." It writes from one of your open centers, in your clients\' words.' })
+        el('li', { text: '"What should I promote today?" She checks in the way your type and authority need.' }),
+        el('li', { text: '"Look at my post before I share it." She reads it through your soulmate client and your design, then gives you one or two changes.' }),
+        el('li', { text: '"Why do I feel so scattered about posting?" She explains what\'s going on in your design, from your own chart.' }),
+        el('li', { text: '"Help me write a promo for my offer this week." She writes from one of your open centers, in your clients\' words.' })
       ]),
-      p("It's an AI built from my teaching. It coaches the way I would, and it's there any time you need it.", 'hint')
+      p("Aura is an AI built from my teaching. She coaches the way I would, and she's there any time you need her.", 'hint')
     ]));
 
     box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 1: Download your Coach Guide' }, [
       el('h3', { text: 'Step 1: Download your Coach Guide' }),
-      p("This file holds the full Promote by Design teaching on every type, authority, profile, center, channel and throat gate. It's how your coach can answer your questions without guessing."),
+      p("This file holds the full Promote by Design teaching on every type, authority, profile, center, channel and throat gate. It's how Aura can answer your questions without guessing."),
       el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Download my Coach Guide', onclick: function () {
         downloadText(coachGuideDoc(), 'promote-by-design-coach-guide.md', 'Downloaded. Add it to your Project files.');
       } })])
@@ -3504,14 +3486,14 @@
     function refresh() {
       out.value = coachMerged();
       var has = co.mine.trim();
-      note.textContent = !has ? "You'll get just your Promo Coach instructions."
-        : (co.mine.indexOf(COACH_TEXT) > -1 ? 'Your Promo Coach is already in there. Nothing to add.' : 'We kept every word of yours and added your Promo Coach underneath.');
+      note.textContent = !has ? "You'll get just Aura's instructions."
+        : (co.mine.indexOf(COACH_TEXT) > -1 ? 'Aura is already in there. Nothing to add.' : 'We kept every word of yours and added Aura underneath.');
     }
     mineBox.addEventListener('input', function () { co.mine = mineBox.value; saveSoon(); refresh(); });
     refresh();
-    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 2: Add your coach instructions' }, [
-      el('h3', { text: 'Step 2: Add your coach instructions' }),
-      p('Instructions tell your Project how to act. Already have some? We keep every word and add your Promo Coach underneath.'),
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 2: Add Aura to your instructions' }, [
+      el('h3', { text: 'Step 2: Add Aura to your instructions' }),
+      p('Instructions tell your Project how to act. Already have some? We keep every word and add Aura underneath.'),
       el('div', { class: 'sub' }, [
         el('div', { class: 't', text: 'Save a copy first' }),
         p("Before you change anything, save what you have. Copy your current instructions into a doc or a note on your phone, or paste them below and tap Download my current instructions. That way nothing gets lost, and you can always go back.")
@@ -3528,7 +3510,7 @@
       el('ol', { class: 'steps' }, [
         el('li', {}, [el('span', { class: 'st', text: 'Open your instructions' }), 'In your Claude or ChatGPT Project, open the instructions.']),
         el('li', {}, [el('span', { class: 'st', text: 'Replace them' }), 'Select everything that\'s there, delete it, and paste in your new instructions. Your old ones are already inside.']),
-        el('li', {}, [el('span', { class: 'st', text: 'Save' }), 'Save your instructions. Every new chat in that Project now has your coach.'])
+        el('li', {}, [el('span', { class: 'st', text: 'Save' }), 'Save your instructions. Every new chat in that Project now has Aura.'])
       ])
     ]));
 
@@ -3550,9 +3532,9 @@
       ])
     ]));
 
-    var starters = ['What should I promote today?', 'Look at my post before I share it: ', 'Why does posting feel so hard for me right now?', 'Explain my design to me like a friend would.'];
-    box.appendChild(el('section', { class: 'card', 'aria-label': 'Say hi to your coach' }, [
-      el('h3', { text: 'Say hi to your coach' }),
+    var starters = ['Hi Aura! What should I promote today?', 'Aura, look at my post before I share it: ', 'Aura, why does posting feel so hard for me right now?', 'Aura, explain my design to me like a friend would.'];
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Say hi to Aura' }, [
+      el('h3', { text: 'Say hi to Aura' }),
       p('Open a new chat in your Project and start with one of these. Tap to copy.', 'hint'),
       el('div', { class: 'chips' }, starters.map(function (t) { return el('button', { type: 'button', class: 'chip', text: t.replace(/: $/, ''), onclick: function () { copyText(t, 'Copied. Paste it into a new chat.'); } }); })),
       p('Want more? My prompts has questions about your design, your business and how you\'re designed to make money.', 'hint')
