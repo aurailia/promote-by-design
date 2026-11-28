@@ -90,6 +90,14 @@
   .card p { margin: 0 0 10px; }
   .card p:last-child { margin-bottom: 0; }
   .hint { color: var(--muted); font-size: 15px; }
+  details.pg { margin: 18px 0 0; border: 1px solid rgba(195,169,255,.35); border-radius: 18px; padding: 4px 14px 10px; background: rgba(255,255,255,.04); }
+  details.pg > summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 2px; }
+  details.pg > summary::-webkit-details-marker { display: none; }
+  details.pg .pg-title { font-family: 'Cormorant Garamond', serif; font-size: 1.45rem; font-weight: 700; color: #fff; }
+  details.pg .pg-count { font-size: .8rem; color: var(--pink, #f4b6cf); white-space: nowrap; margin-left: auto; }
+  details.pg > summary::after { content: "\203A"; color: var(--gold); font-size: 1.4rem; transition: transform .2s; }
+  details.pg[open] > summary::after { transform: rotate(90deg); }
+  details.pg > .hint { margin: 0 0 6px; color: rgba(255,255,255,.75); }
   .stars { list-style: none; margin: 6px 0 10px; padding: 0; }
   .stars li { padding-left: 24px; position: relative; margin-bottom: 8px; }
   .stars li::before { content: "\2726"; position: absolute; left: 0; color: var(--gold); }
@@ -451,7 +459,7 @@
     if (dow > 2) mon = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 7);
     return ymd(mon);
   }
-  var state = { view: 'start', design: { type: '', authority: '', profile: '', open: [], channels: [], motors: [], gates: [], done: false }, business: blankBusiness(), soul: { help: '', called: '', story: '', sources: '', sheet: '', include: true, mode: 'here', now: '', night: '', voice: '', tried: '', cost: '', want: '', hesitate: '', words: '' }, week: blankWeek(), results: { stats: [], dismissed: [], current: blankResults(), history: [] }, library: [], archive: [] };
+  var state = { view: 'start', design: { type: '', authority: '', profile: '', open: [], channels: [], motors: [], gates: [], done: false }, business: blankBusiness(), soul: { help: '', called: '', story: '', sources: '', sheet: '', include: true, mode: 'here', now: '', night: '', voice: '', tried: '', cost: '', want: '', hesitate: '', words: '' }, coach: { mine: '' }, week: blankWeek(), results: { stats: [], dismissed: [], current: blankResults(), history: [] }, library: [], archive: [] };
   try {
     var raw = window.localStorage.getItem(KEY);
     if (raw) {
@@ -471,6 +479,7 @@
           if (sb.community && typeof sb.community === 'object') if (sb.community && Array.isArray(sb.community.items)) b0.community.items = sb.community.items.filter(function (x) { return x && typeof x === 'object'; }).slice(0, 6).map(function (x) { return { name: String(x.name || ''), what: String(x.what || ''), helps: String(x.helps || '') }; });
           if (sb.community && typeof sb.community === 'object') ['name', 'link', 'what', 'draws'].forEach(function (k) { if (typeof sb.community[k] === 'string') b0.community[k] = sb.community[k]; });
         }
+        if (saved.coach && typeof saved.coach.mine === 'string') state.coach.mine = saved.coach.mine;
         if (saved.soul && typeof saved.soul === 'object') {
           ['help', 'called', 'story', 'sources', 'sheet', 'mode', 'now', 'night', 'voice', 'tried', 'cost', 'want', 'hesitate', 'words'].forEach(function (k) { if (typeof saved.soul[k] === 'string') state.soul[k] = saved.soul[k]; });
           state.soul.include = saved.soul.include !== false;
@@ -1645,6 +1654,7 @@
     { id: 'guide', label: 'Promote by design' },
     { id: 'blueprint', label: '1. My HD Blueprint' },
     { id: 'soul', label: '2. My Soulmate Client' },
+    { id: 'coach', label: '3. My Promo Coach' },
     { id: 'prompts', label: 'My prompts' }
   ];
   var navOpen = {};
@@ -1696,7 +1706,7 @@
   }
   function closeMenu() { document.body.classList.remove('nav-open'); $('menuBtn').setAttribute('aria-expanded', 'false'); }
   var HASHES = { start: 'start', design: 'my-design', guide: 'promote-by-design', 'guide-voice': 'how-you-magnetize-people', 'guide-gates': 'your-opening-lines', 'guide-profile': 'how-people-trust-you',
-    'guide-clients': 'your-soulmate-clients', 'guide-gifts': 'your-steady-gifts', 'guide-every': 'before-you-post', business: 'my-business', blueprint: 'my-hd-blueprint', prompts: 'my-prompts', soul: 'my-soulmate-client', write: 'write-my-promos', week: 'my-promo-week',
+    'guide-clients': 'your-soulmate-clients', 'guide-gifts': 'your-steady-gifts', 'guide-every': 'before-you-post', business: 'my-business', blueprint: 'my-hd-blueprint', prompts: 'my-prompts', coach: 'my-promo-coach', soul: 'my-soulmate-client', write: 'write-my-promos', week: 'my-promo-week',
     day0: 'monday', day1: 'tuesday', day2: 'wednesday', day3: 'thursday', day4: 'friday', day5: 'saturday', day6: 'sunday', results: 'my-results', library: 'my-post-library', places: 'places-to-promote' };
   function viewFromHash(h) {
     h = (h || '').replace(/^#/, '').toLowerCase();
@@ -1723,6 +1733,7 @@
     else if (v === 'blueprint') renderBlueprint();
     else if (v === 'prompts') renderPrompts();
     else if (v === 'soul') renderSoul();
+    else if (v === 'coach') renderCoach();
     else if (v === 'week') renderWeek();
     else if (v === 'write') renderWrite();
     else if (v === 'results') renderResults();
@@ -2931,7 +2942,7 @@
     var box = $('view'); box.innerHTML = '';
     var d = state.design;
     box.appendChild(el('div', {}, [
-      p('Build your profile · 1 of 2', 'eyebrow'),
+      p('Build your profile · 1 of 3', 'eyebrow'),
       el('h1', {}, ['My HD ', el('em', { text: 'Blueprint' })]),
       p('Your HD Blueprint Profile is one file that tells Claude how you are designed to show up, communicate and sell, and who you are here for. Add it once to the Claude or ChatGPT Project you use for your marketing or your business, and every post you write together comes through your design.', 'lede')
     ]));
@@ -2988,11 +2999,11 @@
   }
 
   /* ---------- my prompts ---------- */
-  var promptCenter = {};
+  var promptCenter = {}, promptOpen = {};
   function listWords(arr) { return arr.length < 2 ? arr.join('') : arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1]; }
   function promptWrap(body) {
     return [
-      "Use my HD Blueprint Profile and my Soulmate Client Mirror Sheet from this Project's files.",
+      "Use my files in this Project: my HD Blueprint Profile, my Soulmate Client Mirror Sheet, my Promote by Design Coach Guide, and my My Business note if I've added it.",
       '',
       body,
       '',
@@ -3008,22 +3019,52 @@
     var chans = d.channels.map(function (id) { var c = THROAT_CH.filter(function (x) { return x.id === id; })[0]; return c ? c.id + ' ' + c.name : ''; }).filter(Boolean);
     var voiceSrc = d.open.indexOf('throat') > -1 ? 'my open throat' : (chans.length ? 'my channels to the throat (' + listWords(chans) + ')' : 'my throat');
     var openTxt = open.length ? listWords(open) : 'my open centers';
+    var tl = T ? ' (' + T.label + ')' : '', al = A ? ' (' + A.label + ')' : '', pl = d.profile ? ' (' + d.profile + ')' : '';
+    var heartOpen = d.open.indexOf('heart') > -1, sacralOpen = d.open.indexOf('sacral') > -1;
     return [
-      { group: 'Get to know yourself', items: [
-        { id: 'explain', title: 'Explain my design like a friend would', why: 'A simple, real-life walkthrough of your type, authority and profile.',
-          build: function () { return promptWrap('Explain my Human Design to me like a friend would, in simple everyday words. Start with my type' + (T ? ' (' + T.label + ')' : '') + ' and my strategy, then my authority' + (A ? ' (' + A.label + ')' : '') + ', then my profile' + (d.profile ? ' (' + d.profile + ')' : '') + '. For each one, give me a real example of how it shows up in my business, and one small thing I can try this week.'); } },
+      { group: 'Talk to your coach', lead: 'Quick check-ins with your Promo Coach. Use these any day.', items: [
+        { id: 'today', title: 'What should I promote today?', why: 'A check-in the way your type and authority need, then one offer to share today.',
+          build: function () { return promptWrap('Help me decide what to promote today. Check in with me the way my type' + tl + ' and my authority' + al + ' need, one question at a time. Then tell me which offer to share today, which open center to speak to, and give me a hook title to start with.'); } },
+        { id: 'check', title: 'Look at my post before I share it', why: 'It reads your post through your soulmate client and your design, then gives you one or two changes.',
+          build: function () { return promptWrap("I'm going to paste a post I want to share. Read it through my soulmate client and my design. Does the title make them stop? Does the first line show a real moment? Does it sound like me? Is there one clear next step? Give me the top one or two changes, then offer to rewrite it. Ask me for the post first."); } },
+        { id: 'hard', title: 'Why does posting feel so hard right now?', why: "Talk it through. It helps you see what's yours and what you're picking up from other people.",
+          build: function () { return promptWrap("Posting feels hard for me right now. Ask me a few questions, one at a time, about what's going on. Then explain what might be happening in my design, using my type, my authority and my open centers (" + openTxt + "). Help me see what's mine and what I'm picking up from other people, and give me one small thing to do today."); } },
+        { id: 'decide', title: 'Make a decision my way', why: 'Use your authority to make a business decision you feel good about.',
+          build: function () { return promptWrap('I have a decision to make in my business. Using my authority' + al + ' and my strategy, walk me through how I am designed to make it. Ask me what the decision is first, then guide me one question at a time.'); } }
+      ] },
+      { group: 'Tell your coach about your business', lead: 'Do this once. Your coach saves what it learns as a file you add to your Project.', items: [
+        { id: 'mybiz', title: 'Make my My Business note', why: 'Your coach asks about your offers, prices and how you work, then gives you a My Business file.',
+          build: function () { return promptWrap('I want you to get to know my business so you can coach me better. Ask me questions one at a time, and wait for my answer before the next one. Ask about: what I sell and my prices, who buys from me, how people find me now, what is working and what is not, how many hours I want to work, and my goal for the next 3 months. When we are done, write it up as a short note in simple words. Give it to me as a downloadable file called "My Business" so I can add it to my Project files.'); } },
+        { id: 'offers', title: 'Do my offers fit my design?', why: 'See which offers give you energy and which ones drain you.',
+          build: function () { return promptWrap('Look at my offers from my My Business note. If I have not added it, ask me to list my offers first. For each offer, tell me how well it fits my design: my type' + tl + ', my defined and open centers, and my profile' + pl + '. Tell me which ones give me energy and which ones might drain me. Then give me one simple change that would make my offers fit me better.'); } }
+      ] },
+      { group: "How you're designed to run your business", lead: 'Your pace, your week and how you grow, all through your design.', items: [
+        { id: 'rhythm', title: 'My work rhythm', why: 'How to plan your days and your week so you have energy for your business.',
+          build: function () { return promptWrap('Help me build a work rhythm that fits my design. Use my type' + tl + (sacralOpen ? ' and my open Sacral' : ' and my defined Sacral') + ' to tell me how I am built to work, rest and use my energy. Ask me what my week looks like now first. Then give me a simple weekly rhythm, with what to do on high energy days and low energy days.'); } },
         { id: 'running', title: 'Where are my open centers running me?', why: 'Spot where you might be conditioned in your business right now.',
           build: function () { return promptWrap('My open centers are ' + openTxt + '. Ask me 5 questions, one at a time, to help me see where my open centers might be running my business right now. Then tell me what you noticed, and give me one simple thing to try this week for each one that showed up.'); } },
+        { id: 'grow', title: "How I'm designed to grow", why: 'How people find you and come to trust you, through your profile and your type.',
+          build: function () { return promptWrap('Tell me how I am designed to grow my business. Use my profile' + pl + ' to explain how people find me and come to trust me, and my type' + tl + ' to explain how I am built to get seen. Then give me 3 simple things to focus on this month, and one thing I can stop doing.'); } }
+      ] },
+      { group: "How you're designed to make money", lead: 'How you sell, price and launch, the way your design works best.', items: [
+        { id: 'sell', title: "How I'm built to sell", why: 'Sales conversations and calls to action that feel like you.',
+          build: function () { return promptWrap('Explain how I am built to sell, using my type' + tl + ', my authority' + al + ' and my profile' + pl + '. Tell me how to have a sales conversation that feels like me, what to say when someone is interested, and the kind of call to action that fits me. Give me a few example lines I can use in DMs and posts.'); } },
+        { id: 'price', title: 'Price my offers my way', why: 'Set or raise your prices in a way you trust.' + (heartOpen ? ' Includes the worth stuff your open Heart picks up.' : ''),
+          build: function () { return promptWrap('Help me price my offers in a way I trust. Use my authority' + al + ' to guide how I decide. ' + (heartOpen ? 'I have an open Heart, so help me see where I might be undercharging or trying to prove my worth. ' : '') + 'Ask me which offer and what I charge now first. Then walk me through it one question at a time.'); } },
+        { id: 'launch', title: 'Launch or sell all the time?', why: 'Find the way of selling that fits your energy, and plan your next 30 days.',
+          build: function () { return promptWrap('Tell me if my design fits better with launches, selling all the time, or a mix. Use my type' + tl + ', my authority' + al + ' and my defined and open centers. Then help me plan my next 30 days of selling in a way that fits me. Ask me what I want to sell first.'); } },
+        { id: 'money', title: 'Where money gets loud for me', why: 'The money worries and pressure you pick up from other people, and how to work with them.',
+          build: function () { return promptWrap('Using my open centers (' + openTxt + '), show me where money pressure, fear or worth stories might come from other people and not from me. Ask me 3 questions, one at a time, about how money feels in my business right now. Then tell me what you noticed and give me one simple thing to try this week.'); } }
+      ] },
+      { group: 'Your soulmate client', lead: 'Get to know the people you are here for.', items: [
         { id: 'deeper', title: 'Go deeper into one open center', why: 'Pick a center and really understand it, with examples from your business.', pick: true,
           build: function (c) { return promptWrap('Go deeper into my ' + c + '. Explain what I take in from other people, the wisdom it gives me, and how it shows up in my business when it runs me. Then connect it to my soulmate clients using my Client Mirror Sheet. Use examples from my business.'); } },
         { id: 'whybuy', title: 'Why they buy from me', why: 'See where you mirror your soulmate clients, and get words for your bio.',
           build: function () { return promptWrap('Tell me why my soulmate clients are drawn to me. Show me where I mirror them through my open centers and my story. Then give me 3 short sentences I could use in my About section or bio.'); } },
         { id: 'journey', title: "My soulmate client's journey", why: 'Their path from stuck to saying yes, and what they need to hear at each step.',
-          build: function () { return promptWrap("Walk me through my soulmate client's journey from feeling stuck to saying yes to working with me, in 5 stages. For each stage, tell me what they're thinking, the words they use, and what they need to hear from me."); } },
-        { id: 'decide', title: 'Make a decision my way', why: 'Use your authority to make a business decision you feel good about.',
-          build: function () { return promptWrap('I have a decision to make in my business. Using my authority' + (A ? ' (' + A.label + ')' : '') + ' and my strategy, walk me through how I am designed to make it. Ask me what the decision is first, then guide me one question at a time.'); } }
+          build: function () { return promptWrap("Walk me through my soulmate client's journey from feeling stuck to saying yes to working with me, in 5 stages. For each stage, tell me what they're thinking, the words they use, and what they need to hear from me."); } }
       ] },
-      { group: 'Write through your design', items: [
+      { group: 'Write through your design', lead: 'Posts that sound like you and speak to your soulmate clients.', items: [
         { id: 'ideas', title: 'Post ideas from my open centers', why: 'A week of ideas, each one speaking to a different soulmate client.',
           build: function () { return promptWrap('Give me 7 post ideas for this week, rotating through ' + openTxt + '. For each one, give me a hook title, the micro-moment it opens with, and which open center it speaks to. Use my Client Mirror Sheet for real moments.'); } },
         { id: 'moment', title: 'Turn a client moment into a post', why: 'Take something a client said or lived, and make it a post that lands.', pick: true,
@@ -3041,7 +3082,7 @@
     box.appendChild(el('div', {}, [
       p('Use it with Claude', 'eyebrow'),
       el('h1', {}, ['My ', el('em', { text: 'prompts' })]),
-      p('Prompts to learn more about yourself and your soulmate clients, and to write through your design. Each one is already filled in with your design. Paste them into a chat inside your Claude or ChatGPT Project, where your HD Blueprint Profile and Soulmate Client Mirror Sheet live.', 'lede')
+      p('Ready-made questions for your Promo Coach. Each one is already filled in with your design. Tap a group to open it, copy a prompt, and paste it into a chat inside your Claude or ChatGPT Project.', 'lede')
     ]));
     if (!d.done) {
       box.appendChild(el('div', { class: 'callout' }, [
@@ -3051,8 +3092,14 @@
       return;
     }
     var open = CENTERS.filter(function (c) { return d.open.indexOf(c.id) > -1; }).map(function (c) { return 'Open ' + c.label; });
-    promptList().forEach(function (g) {
-      box.appendChild(el('h2', { class: 'pgroup', text: g.group }));
+    promptList().forEach(function (g, gi) {
+      var gBody = el('div', { class: 'pg-body' });
+      var gDet = el('details', { class: 'pg', open: promptOpen[g.group] === undefined ? gi === 0 : promptOpen[g.group] }, [
+        el('summary', {}, [el('span', { class: 'pg-title', text: g.group }), el('span', { class: 'pg-count', text: g.items.length + ' prompts' })]),
+        g.lead ? p(g.lead, 'hint') : null, gBody
+      ]);
+      gDet.addEventListener('toggle', function () { promptOpen[g.group] = gDet.open; });
+      box.appendChild(gDet);
       g.items.forEach(function (it) {
         if (it.pick && !open.length) return;
         if (it.pick && open.indexOf(promptCenter[it.id]) === -1) promptCenter[it.id] = open[0];
@@ -3071,10 +3118,10 @@
           el('summary', {}, [el('span', { class: 'chev', 'aria-hidden': 'true', text: '›' }), el('span', { class: 'ddate', text: 'See the prompt' })]),
           el('div', { class: 'day-body' }, [peek])
         ]));
-        box.appendChild(el('section', { class: 'card', 'aria-label': it.title }, kids));
+        gBody.appendChild(el('section', { class: 'card', 'aria-label': it.title }, kids));
       });
     });
-    box.appendChild(el('div', { class: 'actions' }, [el('a', { class: 'btn', href: CLAUDE_URL, target: '_blank', rel: 'noopener noreferrer', text: 'Open Claude' })]));
+    box.appendChild(el('div', { class: 'actions' }, [el('a', { class: 'btn', href: CLAUDE_URL, target: '_blank', rel: 'noopener noreferrer', text: 'Open Claude' }), el('a', { class: 'btn', href: 'https://chatgpt.com/', target: '_blank', rel: 'noopener noreferrer', text: 'Open ChatGPT' })]));
   }
   function renderKeepPrompts() { var y = window.pageYOffset; renderPrompts(); window.scrollTo(0, y); }
 
@@ -3195,7 +3242,7 @@
     var box = $('view'); box.innerHTML = '';
     var so = state.soul;
     box.appendChild(el('div', {}, [
-      p('Build your profile · 2 of 2', 'eyebrow'),
+      p('Build your profile · 2 of 3', 'eyebrow'),
       el('h1', {}, ['My soulmate ', el('em', { text: 'client' })]),
       p("Your Soulmate Client Mirror Sheet shows who your soulmate client is, what they're living, and where you mirror them through your Human Design. It gives your content the micro specifics that magnetize your ideal clients. Answer a few questions right here, or have Claude or ChatGPT build it from your client calls.", 'lede'),
       speakTip()
@@ -3297,8 +3344,220 @@
     }
     drawStep2();
     box.appendChild(projectCard());
+    box.appendChild(el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Next: 3. My Promo Coach', onclick: function () { save(); setView('coach'); } })]));
+    box.appendChild(p("That's your two files done. Next, set up your Promo Coach so every chat in your Project coaches you through your design. Everything here saves as you type.", 'saved-note'));
+  }
+
+
+  /* ---------- my promo coach ---------- */
+  var COACH_TEXT = [
+    'PROMO COACH',
+    "You're my Promo Coach, built from Aurailia Arnold's Promote by Design teaching in She Promotes™. Coach me the way she would: warm, direct and honest. You're an AI, so if I ask, tell me that.",
+    '',
+    'MY FILES',
+    'Read these before you answer:',
+    "- My HD Blueprint Profile: how I'm designed to show up, communicate and sell, and who I'm here for.",
+    "- My Soulmate Client Mirror Sheet: my clients' real moments and exact words.",
+    '- The Promote by Design Coach Guide: the full teaching on every type, authority, profile, center, channel and throat gate.',
+    "- My Business note and my She Promotes™ Promo Playbook, if I've added them.",
+    "Only use Human Design details that are in these files. If something isn't there, ask me. Don't guess.",
+    '',
+    'HOW TO TALK TO ME',
+    "- Like a friend who's also a really good marketing coach.",
+    '- Simple, everyday words. Short sentences.',
+    '- When you explain my design, tie it to something I can do today.',
+    "- Be honest. If a post won't land, tell me kindly, tell me why, and tell me how to fix it.",
+    '- Give me one or two changes at a time. Not ten.',
+    '',
+    'WHAT YOU HELP ME WITH',
+    "- What to promote today. Check in the way my type and authority need. If I'm built to respond, ask me what I'm excited about. If my authority needs time, remind me to sleep on big decisions like launches and price changes.",
+    '- Looking at my post before I share it. Read it through my soulmate client and my design. Does the title make them stop? Does the first line show a real moment? Does it sound like me? Is there one clear next step? Give me the top one or two changes, then offer a rewrite.',
+    "- Writing a post. Start from one of my open centers and a real moment from my Mirror Sheet. Use my clients' exact words.",
+    "- When I feel stuck, scattered or doubtful. Explain what's going on in my design. Help me see what's mine and what I'm picking up from other people.",
+    '- Running my business and making money. Help me with my pace, my offers, my pricing and my sales, all through how I\'m designed.',
+    '',
+    'RULES FOR MY POSTS',
+    '- Never use Human Design words in my posts, like open, undefined, center or channel. My readers should feel understood, not taught.',
+    "- Don't make up results, testimonials or quotes.",
+    '- No em dashes.',
+    '- When you\'re done helping, ask me: "Want to go deeper, or is this good?"'
+  ].join('\n');
+  function coachMerged() {
+    var mine = (state.coach.mine || '').replace(/\s+$/, '');
+    if (!mine.trim()) return COACH_TEXT;
+    if (mine.indexOf(COACH_TEXT) > -1) return mine;
+    return mine + '\n\n' + COACH_TEXT;
+  }
+  function coachGuideDoc() {
+    var x = [];
+    function c(t) { return clean(t); }
+    x.push('# Promote by Design Coach Guide', '',
+      "*This is Aurailia Arnold's Promote by Design teaching from She Promotes™. It covers every type, authority, profile, center, channel and throat gate, so you can explain any part of Human Design the same simple way. The business owner's own chart is in her HD Blueprint Profile. Use this guide to go deeper. Only use what is here and in her own files.*",
+      '', 'Everywhere this guide says "you," it means the person with that part of the design. When you coach her, speak to her as "you," in simple, warm, everyday words.');
+
+    x.push('', '## The five types');
+    TYPES.forEach(function (T) {
+      var D = TYPE_DEEP[T.id], L = PROMO_TYPE[T.id]; if (!D) return;
+      x.push('', '### ' + T.label, D.here, '', D.means, '',
+        '- **Strategy:** ' + D.strategy, '- **How they promote:** ' + D.promote, '- **How they sell:** ' + D.sell);
+      if (L && L.cta) x.push('- **A call to action that fits:** ' + c(L.cta));
+      x.push('- **When it feels off:** ' + D.off, '- **When they are living their design:** ' + D.signature, '- **Try this:** ' + D.try);
+      if (L && L.how && L.how.length) { x.push('- **Promo habits that fit:**'); L.how.forEach(function (h) { x.push('  - ' + c(h)); }); }
+    });
+
+    x.push('', '## The authorities', 'Authority is how each person makes decisions they trust. It shapes when to hit post and how to say yes to a sale.');
+    AUTH.forEach(function (A) {
+      var D = AUTH_DEEP[A.id]; if (!D) return;
+      x.push('', '### ' + A.label + ' authority', D.here, '', D.means, '', '- **When to hit post:** ' + D.post, '- **Saying yes to a sale:** ' + D.sale, '- **Try this:** ' + D.try);
+    });
+
+    x.push('', '## The profiles', 'The profile is the role someone plays with people and how people come to trust them.');
+    Object.keys(PROFILES).forEach(function (k) { x.push('- **' + k + ' ' + PROFILES[k].name + ':** ' + c(PROFILES[k].text)); });
+
+    x.push('', '## The nine centers', "A defined center is steady energy, the same every day. It's what people can count on. An open center takes in other people's energy and amplifies it. Open centers are where someone has lived what their soulmate clients live, so that's where their words land.");
+    CENTERS.forEach(function (C) {
+      var D = CENTER_DEEP[C.id]; if (!D) return;
+      x.push('', '### ' + C.label, D.what);
+      var O = D.open;
+      if (O) {
+        x.push('', '**When it is open**',
+          '- **What you take in:** ' + O.takeIn,
+          '- **The wisdom it gives you:** ' + O.wisdom,
+          '- **When it runs you:** ' + O.runsYou + ' Ask: "' + O.question + '"',
+          '- **Who it draws to you:** ' + O.draws,
+          '- **Their micro-moments:** ' + O.moments.join('. ') + '.',
+          '- **The voice in their head:** ' + O.voice.map(function (v) { return '"' + v + '"'; }).join(' '),
+          '- **What they really want:** ' + O.wants,
+          '- **How to speak to it:** ' + O.speak,
+          '- **Avoid:** ' + O.avoid,
+          '- **How to write an opening line:** ' + O.formula,
+          '- **Opening lines that land:**');
+        O.lines.forEach(function (l) { x.push('  - ' + l.type + ': "' + l.line + '" Why it works: ' + l.why); });
+      }
+      var F = D.defined;
+      if (F) x.push('', '**When it is defined**', '- **The gift:** ' + F.gift, '- **How it shows up when promoting:** ' + F.promo, '- **Watch for:** ' + F.watch);
+    });
+
+    x.push('', '## The throat and the voice', '**Defined throat:** ' + c(DEFINED_THROAT), '', '**Open throat:** ' + c(OPEN_THROAT.intro) + ' ' + c(OPEN_THROAT.para));
+    OPEN_THROAT.tips.forEach(function (t) { x.push('- ' + c(t)); });
+    x.push('', '**Motor to the throat:** ' + c(WITH_MOTOR), '', '**No motor to the throat:** ' + c(NO_MOTOR));
+    Object.keys(MOTOR_INFO).forEach(function (k) { var M = MOTOR_INFO[k]; x.push('- ' + M.name + ' (' + M.what + '): ' + M.voice + '.'); });
+
+    x.push('', '## Channels to the throat');
+    THROAT_GROUPS.forEach(function (G) {
+      var chs = THROAT_CH.filter(function (h) { return h.center === G.id; });
+      if (!chs.length) return;
+      x.push('', '### ' + G.label, 'It gives the voice ' + G.voiceOf + '.' + (G.intro ? ' ' + c(G.intro) : ''));
+      if (G.line) x.push('', c(G.line));
+      chs.forEach(function (h) {
+        x.push('', '**Channel ' + h.id + ', ' + h.name + '.** ' + c(h.blurb));
+        (h.tips || []).forEach(function (t) { x.push('- ' + c(t)); });
+      });
+    });
+
+    x.push('', '## The throat gates', 'Each throat gate speaks in its own way. They make the best opening lines.');
+    Object.keys(GATE_DEEP).forEach(function (g) {
+      var D = GATE_DEEP[g];
+      x.push('', '### Gate ' + g + ': "' + (GATE_VOICE[g] || '') + '" (' + D.name + ')', D.here, '', D.means, '', '- **When promoting:** ' + D.promote, '- **When it feels off:** ' + D.off, '- **Try this:** ' + D.try);
+    });
+
+    x.push('', '## How to coach with this guide',
+      "- Start from her own chart in her HD Blueprint Profile. Use this guide to explain more or to answer her questions.",
+      '- Tie every explanation to something she can do today in her business.',
+      "- Write her posts through one of her open centers, with a real moment and her clients' exact words from her Mirror Sheet.",
+      '- Never use Human Design words in her posts. Her readers should feel understood, not taught.',
+      "- Only use what is in this guide and her files. If you don't know, ask her.");
+    return x.join('\n');
+  }
+  function renderCoach() {
+    var box = $('view'); box.innerHTML = '';
+    var co = state.coach;
+    box.appendChild(el('div', {}, [
+      p('Build your profile · 3 of 3', 'eyebrow'),
+      el('h1', {}, ['My Promo ', el('em', { text: 'Coach' })]),
+      p("Your Promo Coach lives in your Claude or ChatGPT Project. It's built from my Promote by Design teaching, and it reads your two files, so it coaches you through your own design. Ask it what to promote today, have it look at your post before you share it, or talk through why posting feels hard right now.", 'lede')
+    ]));
+
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'What you can ask it' }, [
+      el('h3', { text: 'What you can ask it' }),
+      el('ul', { class: 'stars' }, [
+        el('li', { text: '"What should I promote today?" It checks in the way your type and authority need.' }),
+        el('li', { text: '"Look at my post before I share it." It reads it through your soulmate client and your design, then gives you one or two changes.' }),
+        el('li', { text: '"Why do I feel so scattered about posting?" It explains what\'s going on in your design, from your own chart.' }),
+        el('li', { text: '"Help me write a promo for my offer this week." It writes from one of your open centers, in your clients\' words.' })
+      ]),
+      p("It's an AI built from my teaching. It coaches the way I would, and it's there any time you need it.", 'hint')
+    ]));
+
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 1: Download your Coach Guide' }, [
+      el('h3', { text: 'Step 1: Download your Coach Guide' }),
+      p("This file holds the full Promote by Design teaching on every type, authority, profile, center, channel and throat gate. It's how your coach can answer your questions without guessing."),
+      el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Download my Coach Guide', onclick: function () {
+        downloadText(coachGuideDoc(), 'promote-by-design-coach-guide.md', 'Downloaded. Add it to your Project files.');
+      } })])
+    ]));
+
+    var mineBox = el('textarea', { class: 'textarea', rows: 6, placeholder: 'Paste your current Project instructions here. No instructions yet? Leave this empty.', 'aria-label': 'Your current Project instructions' });
+    mineBox.value = co.mine;
+    var out = el('textarea', { class: 'textarea', rows: 8, readonly: true, 'aria-label': 'Your new instructions' });
+    var note = p('', 'hint');
+    function refresh() {
+      out.value = coachMerged();
+      var has = co.mine.trim();
+      note.textContent = !has ? "You'll get just your Promo Coach instructions."
+        : (co.mine.indexOf(COACH_TEXT) > -1 ? 'Your Promo Coach is already in there. Nothing to add.' : 'We kept every word of yours and added your Promo Coach underneath.');
+    }
+    mineBox.addEventListener('input', function () { co.mine = mineBox.value; saveSoon(); refresh(); });
+    refresh();
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 2: Add your coach instructions' }, [
+      el('h3', { text: 'Step 2: Add your coach instructions' }),
+      p('Instructions tell your Project how to act. Already have some? We keep every word and add your Promo Coach underneath.'),
+      el('div', { class: 'sub' }, [
+        el('div', { class: 't', text: 'Save a copy first' }),
+        p("Before you change anything, save what you have. Copy your current instructions into a doc or a note on your phone, or paste them below and tap Download my current instructions. That way nothing gets lost, and you can always go back.")
+      ]),
+      el('div', { class: 'field' }, [el('label', { text: 'Your current instructions (optional)' }), p('Open your Project, find its instructions, and copy everything that\'s there.', 'help'), mineBox]),
+      el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn small', text: 'Download my current instructions', onclick: function () {
+        if (!co.mine.trim()) { toast('Paste your instructions first.'); return; }
+        downloadText(co.mine, 'my-project-instructions-backup.txt', 'Saved. Keep this file somewhere safe.');
+      } })]),
+      el('div', { class: 'field' }, [el('label', { text: 'Your new instructions' }), note, out]),
+      el('div', { class: 'actions' }, [
+        el('button', { type: 'button', class: 'btn main', text: 'Copy my new instructions', onclick: function () { copyText(coachMerged(), 'Copied. Paste it into your Project instructions.'); } })
+      ]),
+      el('ol', { class: 'steps' }, [
+        el('li', {}, [el('span', { class: 'st', text: 'Open your instructions' }), 'In your Claude or ChatGPT Project, open the instructions.']),
+        el('li', {}, [el('span', { class: 'st', text: 'Replace them' }), 'Select everything that\'s there, delete it, and paste in your new instructions. Your old ones are already inside.']),
+        el('li', {}, [el('span', { class: 'st', text: 'Save' }), 'Save your instructions. Every new chat in that Project now has your coach.'])
+      ])
+    ]));
+
+    var d = state.design, so = state.soul;
+    function fileRow(name, ok, go, goLabel) {
+      return el('li', {}, [el('span', { class: 'st', text: name }), ok ? 'Ready.' : 'Not made yet. ', ok ? null : el('button', { type: 'button', class: 'btn small', text: goLabel, onclick: function () { setView(go); } })]);
+    }
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Step 3: Check your Project files' }, [
+      el('h3', { text: 'Step 3: Check your Project files' }),
+      p('Your Project needs these three files. Upload any that are missing.'),
+      el('ol', { class: 'steps' }, [
+        fileRow('HD Blueprint Profile', d.done, 'blueprint', 'Go to my Blueprint'),
+        fileRow('Soulmate Client Mirror Sheet', !!(so.sheet.trim() || soulHereFilled()), 'soul', 'Go to my Soulmate Client'),
+        el('li', {}, [el('span', { class: 'st', text: 'Promote by Design Coach Guide' }), 'From Step 1 on this page.'])
+      ]),
+      el('div', { class: 'actions' }, [
+        el('a', { class: 'btn', href: CLAUDE_URL, target: '_blank', rel: 'noopener noreferrer', text: 'Open Claude' }),
+        el('a', { class: 'btn', href: 'https://chatgpt.com/', target: '_blank', rel: 'noopener noreferrer', text: 'Open ChatGPT' })
+      ])
+    ]));
+
+    var starters = ['What should I promote today?', 'Look at my post before I share it: ', 'Why does posting feel so hard for me right now?', 'Explain my design to me like a friend would.'];
+    box.appendChild(el('section', { class: 'card', 'aria-label': 'Say hi to your coach' }, [
+      el('h3', { text: 'Say hi to your coach' }),
+      p('Open a new chat in your Project and start with one of these. Tap to copy.', 'hint'),
+      el('div', { class: 'chips' }, starters.map(function (t) { return el('button', { type: 'button', class: 'chip', text: t.replace(/: $/, ''), onclick: function () { copyText(t, 'Copied. Paste it into a new chat.'); } }); })),
+      p('Want more? My prompts has questions about your design, your business and how you\'re designed to make money.', 'hint')
+    ]));
     box.appendChild(el('div', { class: 'actions' }, [el('button', { type: 'button', class: 'btn main', text: 'Next: my prompts', onclick: function () { save(); setView('prompts'); } })]));
-    box.appendChild(p("That's your profile done. Every chat inside your Project now knows how you're designed and who you're here for. Everything here saves as you type.", 'saved-note'));
   }
 
   /* ---------- my promo week ---------- */
